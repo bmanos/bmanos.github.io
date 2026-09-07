@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Network Security Assessment Roadmap — IT Field Manual</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#14202E; --ink-2:#1C2C3E; --paper:#E9EDF2; --surface:#FFFFFF;
+    --text:#1B2733; --muted:#5C6B7A; --line:#D6DEE7; --line-soft:#E7ECF1;
+    --link:#245C8C; --link-hover:#16405F;
+    --f:#1F7A54; --f-bg:#E6F1EC; --f-line:#B9DECB;
+    --p:#AE7717; --p-bg:#FAF0DB; --p-line:#EAD4A2;
+    --a:#A63C29; --a-bg:#F7E7E2; --a-line:#E7C3B8;
+    --code-bg:#101c29; --code-text:#E7EEF5; --code-c:#7FA6C4; --code-a:#8FD3B6;
+    --warn-bg:#FBF3E6; --warn-line:#E7C98C;
+    --r:8px; --maxw:820px; --sbw:288px;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+  body{
+    margin:0; background:var(--paper); color:var(--text);
+    font-family:"IBM Plex Sans",system-ui,sans-serif; font-size:16px; line-height:1.62;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:var(--link); text-decoration:none; border-bottom:1px solid rgba(36,92,140,.32); transition:color .15s,border-color .15s}
+  a:hover{color:var(--link-hover); border-bottom-color:var(--link-hover)}
+  code{font-family:"IBM Plex Mono",monospace; font-size:.9em}
+
+  /* ---------- Layout ---------- */
+  .shell{display:grid; grid-template-columns:var(--sbw) 1fr; min-height:100vh}
+  .sidebar{
+    background:var(--ink); color:#cfd9e4; position:sticky; top:0; height:100vh;
+    overflow-y:auto; padding:26px 20px 40px; border-right:1px solid #0c1521;
+  }
+  .main{padding:0 40px 96px; min-width:0}
+  .col{max-width:var(--maxw); margin:0 auto}
+
+  /* ---------- Sidebar nav ---------- */
+  .brand{font-family:"Space Grotesk",sans-serif; font-weight:700; font-size:1.05rem; color:#fff; letter-spacing:-.01em; line-height:1.25}
+  .brand small{display:block; font-weight:500; font-size:.72rem; color:#7f92a6; margin-top:6px; letter-spacing:.02em}
+  .nav{margin-top:26px}
+  .nav .grp{font-family:"IBM Plex Mono",monospace; font-size:.66rem; color:#71869b; margin:22px 0 8px; letter-spacing:.06em}
+  .nav a{
+    display:block; color:#b7c3d0; border:0; padding:5px 10px; border-radius:6px;
+    font-size:.845rem; line-height:1.4; border-left:2px solid transparent;
+  }
+  .nav a .n{color:#728aa0; font-family:"IBM Plex Mono",monospace; font-size:.8em; margin-right:7px}
+  .nav a:hover{background:#1d2d40; color:#fff}
+  .nav a.active{background:#1d2d40; color:#fff; border-left-color:var(--p)}
+  .nav a.active .n{color:#f0c876}
+
+  /* ---------- Masthead ---------- */
+  .mast{background:var(--ink); color:#eaf0f6; margin:0 -40px 0; padding:56px 40px 44px}
+  .mast .col{max-width:var(--maxw)}
+  .kicker{font-family:"IBM Plex Mono",monospace; font-size:.72rem; color:#89a2bd; letter-spacing:.08em; margin:0 0 14px}
+  h1{font-family:"Space Grotesk",sans-serif; font-weight:700; font-size:2.5rem; line-height:1.06; letter-spacing:-.02em; margin:0 0 16px; color:#fff}
+  .lede{font-size:1.08rem; color:#c3d0dd; max-width:60ch; margin:0 0 26px}
+  .tags{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:6px}
+  .tag{font-family:"IBM Plex Mono",monospace; font-size:.72rem; color:#bcccdb; border:1px solid #33465b; border-radius:20px; padding:4px 12px}
+
+  /* ---------- Level legend ---------- */
+  .legend{background:var(--surface); margin:0 -40px; padding:22px 40px; border-bottom:1px solid var(--line)}
+  .legend .col{display:flex; flex-wrap:wrap; align-items:center; gap:14px}
+  .legend .lg-label{font-size:.85rem; color:var(--muted); margin-right:2px}
+  .lvchip{
+    display:inline-flex; align-items:center; gap:9px; cursor:pointer; border:1px solid var(--line);
+    background:#fff; border-radius:30px; padding:6px 14px 6px 8px; font-size:.85rem; color:var(--text);
+    font-family:inherit; transition:box-shadow .15s, border-color .15s;
+  }
+  .lvchip:hover{border-color:#b7c3cf}
+  .lvchip .dot{width:22px; height:22px; border-radius:50%; display:grid; place-items:center; color:#fff; font-family:"IBM Plex Mono",monospace; font-weight:500; font-size:.78rem}
+  .lvchip small{color:var(--muted)}
+  .lvchip.on{box-shadow:0 0 0 2px currentColor inset}
+  .lvchip[data-f].on{color:var(--f)} .lvchip[data-p].on{color:var(--p)} .lvchip[data-a].on{color:var(--a)}
+  .dot-f{background:var(--f)} .dot-p{background:var(--p)} .dot-a{background:var(--a)}
+  .lg-hint{font-size:.78rem; color:var(--muted); margin-left:auto}
+
+  /* ---------- Content ---------- */
+  .content{background:var(--surface); margin:0 -40px; padding:8px 40px 60px; border-bottom:1px solid var(--line)}
+  section{scroll-margin-top:20px; padding-top:34px}
+  .part{scroll-margin-top:20px; margin:56px 0 4px; padding-top:30px; border-top:2px solid var(--ink)}
+  .part .pnum{font-family:"Space Grotesk",sans-serif; font-weight:700; font-size:.8rem; color:var(--p); letter-spacing:.04em}
+  .part h2{font-family:"Space Grotesk",sans-serif; font-weight:700; font-size:1.75rem; letter-spacing:-.015em; margin:6px 0 8px; color:var(--ink)}
+  .part p{color:var(--muted); font-style:normal; margin:0; max-width:62ch}
+
+  h2.sec{font-family:"Space Grotesk",sans-serif; font-weight:600; font-size:1.4rem; letter-spacing:-.01em; color:var(--ink); margin:0 0 6px; display:flex; flex-wrap:wrap; align-items:baseline; gap:12px}
+  h2.sec .snum{font-family:"IBM Plex Mono",monospace; font-size:.95rem; color:var(--muted); font-weight:400}
+  h3{font-family:"Space Grotesk",sans-serif; font-weight:600; font-size:1.08rem; color:var(--ink-2); margin:26px 0 8px}
+  p{margin:0 0 14px}
+  ul,ol{margin:0 0 16px; padding-left:22px}
+  li{margin:5px 0}
+
+  /* level badge inline */
+  .badge{font-family:"IBM Plex Mono",monospace; font-size:.7rem; font-weight:500; border-radius:20px; padding:3px 11px; white-space:nowrap; vertical-align:middle}
+  .badge-f{background:var(--f-bg); color:var(--f); border:1px solid var(--f-line)}
+  .badge-p{background:var(--p-bg); color:var(--p); border:1px solid var(--p-line)}
+  .badge-a{background:var(--a-bg); color:var(--a); border:1px solid var(--a-line)}
+  .gear{font-family:"IBM Plex Mono",monospace; font-size:.68rem; color:var(--p); background:var(--p-bg); border:1px solid var(--p-line); border-radius:5px; padding:2px 7px}
+
+  /* layered blocks */
+  .layer{border-left:3px solid var(--line); padding:2px 0 2px 16px; margin:14px 0}
+  .layer .lt{font-family:"IBM Plex Mono",monospace; font-size:.72rem; font-weight:500; display:inline-block; margin-right:8px; padding:1px 8px; border-radius:5px}
+  .layer.concept{border-left-color:#9db4c8} .layer.concept .lt{background:#eaf0f6; color:#3d5871}
+  .layer.do{border-left-color:var(--f)} .layer.do .lt{background:var(--f-bg); color:var(--f)}
+  .layer.deeper{border-left-color:var(--p)} .layer.deeper .lt{background:var(--p-bg); color:var(--p)}
+  .layer p{margin:0 0 10px} .layer p:last-child{margin-bottom:0}
+  .layer ul,.layer ol{margin-bottom:8px}
+
+  /* code */
+  pre{background:var(--code-bg); color:var(--code-text); border-radius:var(--r); padding:16px 18px; overflow-x:auto; margin:12px 0; font-size:.855rem; line-height:1.6; border:1px solid #1c2c3d}
+  pre code{font-family:"IBM Plex Mono",monospace; color:inherit}
+  pre .c{color:var(--code-c)}      /* comments */
+  pre .g{color:var(--code-a)}      /* highlight */
+  p code,li code,td code{background:#eef2f6; color:#254; color:#22405a; border:1px solid #dde5ec; border-radius:4px; padding:1px 6px}
+  code.ph{background:#f4eeff; color:#5b3ea6; border:1px dashed #c9b6ef}
+
+  /* tables */
+  .tw{overflow-x:auto; margin:16px 0}
+  table{border-collapse:collapse; width:100%; font-size:.9rem}
+  th,td{text-align:left; padding:9px 12px; border-bottom:1px solid var(--line-soft); vertical-align:top}
+  th{font-family:"IBM Plex Mono",monospace; font-size:.72rem; font-weight:500; color:var(--muted); letter-spacing:.03em; border-bottom:1px solid var(--line); background:#f6f8fa}
+  tbody tr:hover{background:#f8fafb}
+  td .todo{color:var(--a); font-family:"IBM Plex Mono",monospace; font-size:.78rem}
+
+  /* callouts */
+  .callout{border-radius:var(--r); padding:16px 18px; margin:18px 0; font-size:.95rem}
+  .callout .ch{font-family:"Space Grotesk",sans-serif; font-weight:600; display:block; margin-bottom:4px}
+  .callout p:last-child{margin-bottom:0}
+  .warn{background:var(--warn-bg); border:1px solid var(--warn-line)} .warn .ch{color:#8a5a12}
+  .note{background:#eef1f5; border:1px solid var(--line)} .note .ch{color:var(--ink-2)}
+  .stop{background:var(--a-bg); border:1px solid var(--a-line)} .stop .ch{color:var(--a)}
+
+  /* checklist */
+  .check{list-style:none; padding-left:0}
+  .check li{position:relative; padding-left:30px; margin:9px 0}
+  .check li::before{content:""; position:absolute; left:0; top:3px; width:17px; height:17px; border:2px solid var(--f); border-radius:4px}
+
+  .footer{max-width:var(--maxw); margin:26px auto 0; color:var(--muted); font-size:.85rem}
+  .footer em{color:var(--muted)}
+
+  /* level-focus dimming */
+  body.focus-f .lvl-a,body.focus-f .lvl-p,
+  body.focus-p .lvl-a,body.focus-p .lvl-f,
+  body.focus-a .lvl-f,body.focus-a .lvl-p{opacity:.28; filter:grayscale(.3)}
+  .lvl-a,.lvl-p,.lvl-f{transition:opacity .2s, filter .2s}
+
+  /* mobile */
+  .topbar{display:none}
+  .scrim{display:none}
+  @media (max-width:940px){
+    .shell{grid-template-columns:1fr}
+    .topbar{display:flex; position:sticky; top:0; z-index:40; align-items:center; gap:12px;
+      background:var(--ink); color:#fff; padding:12px 18px; border-bottom:1px solid #0c1521}
+    .topbar b{font-family:"Space Grotesk",sans-serif; font-size:.98rem; font-weight:600}
+    .menu{margin-left:auto; background:#25384c; color:#fff; border:0; border-radius:6px; padding:8px 12px; font:inherit; font-size:.85rem; cursor:pointer}
+    .sidebar{position:fixed; top:0; left:0; z-index:50; width:280px; height:100vh; transform:translateX(-100%); transition:transform .22s}
+    body.nav-open .sidebar{transform:none}
+    body.nav-open .scrim{display:block; position:fixed; inset:0; z-index:45; background:rgba(10,18,28,.5)}
+    .main{padding:0 20px 72px}
+    .mast{margin:0 -20px; padding:38px 20px 32px}
+    .legend{margin:0 -20px; padding:18px 20px}
+    .legend .col{gap:10px} .lg-hint{width:100%; margin:4px 0 0}
+    .content{margin:0 -20px; padding:4px 20px 48px}
+    h1{font-size:2rem}
+  }
+  @media (max-width:940px){.mast,.legend,.content{max-width:none}}
+  :focus-visible{outline:3px solid #f0c876; outline-offset:2px; border-radius:3px}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <b>Assessment Roadmap</b>
+  <button class="menu" id="menuBtn" aria-label="Open contents">☰ Contents</button>
+</div>
+<div class="scrim" id="scrim"></div>
+
+<div class="shell">
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">Network Assessment Roadmap<small>IT Department · Field Manual</small></div>
+    <nav class="nav" id="nav">
+      <div class="grp">Getting started</div>
+      <a href="#s0"><span class="n">0</span>How to use this manual</a>
+      <a href="#s1"><span class="n">1</span>Ground rules &amp; authorization</a>
+      <a href="#s2"><span class="n">2</span>Toolkit setup</a>
+      <div class="grp">Part I — External</div>
+      <a href="#s3"><span class="n">3</span>Map the external footprint</a>
+      <a href="#s4"><span class="n">4</span>Passive reconnaissance</a>
+      <a href="#s5"><span class="n">5</span>DNS enumeration</a>
+      <a href="#s6"><span class="n">6</span>Email security posture</a>
+      <a href="#s7"><span class="n">7</span>External port scanning</a>
+      <a href="#s8"><span class="n">8</span>Service &amp; web testing</a>
+      <a href="#s9"><span class="n">9</span>External vuln scan</a>
+      <div class="grp">Part II — Internal</div>
+      <a href="#s10"><span class="n">10</span>Position your scanner</a>
+      <a href="#s11"><span class="n">11</span>Layer-2 discovery</a>
+      <a href="#s12"><span class="n">12</span>Internal host sweep</a>
+      <a href="#s13"><span class="n">13</span>Windows &amp; SMB enum</a>
+      <a href="#s14"><span class="n">14</span>Active Directory review</a>
+      <a href="#s15"><span class="n">15</span>Internal vuln scan</a>
+      <a href="#s16"><span class="n">16</span>Host hardening audits</a>
+      <a href="#s17"><span class="n">17</span>Network device audits</a>
+      <a href="#s18"><span class="n">18</span>Traffic &amp; segmentation</a>
+      <div class="grp">Part III — Report</div>
+      <a href="#s19"><span class="n">19</span>Triage &amp; false positives</a>
+      <a href="#s20"><span class="n">20</span>Risk scoring</a>
+      <a href="#s21"><span class="n">21</span>Reporting</a>
+      <a href="#s22"><span class="n">22</span>Remediation &amp; retest</a>
+      <a href="#s23"><span class="n">23</span>Cadence &amp; metrics</a>
+      <div class="grp">Appendices</div>
+      <a href="#a-cmd">A · Command reference</a>
+      <a href="#a-links">B · Tool &amp; reference links</a>
+      <a href="#a-gloss">C · Glossary</a>
+      <a href="#a-check">D · Safe-scanning checklist</a>
+    </nav>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <!-- Masthead -->
+    <header class="mast">
+      <div class="col">
+        <p class="kicker">Internal reference — open-source toolchain</p>
+        <h1>Network Security Assessment Roadmap</h1>
+        <p class="lede">A step-by-step methodology for checking our network from the outside and the inside — written to teach as well as to be executed in the field.</p>
+        <div class="tags">
+          <span class="tag">Windows / Active Directory</span>
+          <span class="tag">Linux / Unix</span>
+          <span class="tag">Network devices</span>
+          <span class="tag">On-prem</span>
+          <span class="tag">Open-source only</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Level legend -->
+    <div class="legend">
+      <div class="col">
+        <span class="lg-label">Skill levels:</span>
+        <button class="lvchip" data-f><span class="dot dot-f">F</span> Foundation <small>everyone</small></button>
+        <button class="lvchip" data-p><span class="dot dot-p">P</span> Practitioner <small>some experience</small></button>
+        <button class="lvchip" data-a><span class="dot dot-a">A</span> Advanced <small>senior / supervised</small></button>
+        <span class="lg-hint">Tap a level to focus only that tier. Tap again to show all.</span>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="col">
+
+        <!-- 0 -->
+        <section id="s0" class="lvl-f">
+          <h2 class="sec"><span class="snum">00</span> How to use this manual <span class="badge badge-f">F · Foundation</span></h2>
+          <p>This is both a <strong>teaching guide</strong> and a <strong>field manual</strong>. Every technique is written in three layers so it serves the whole team:</p>
+          <div class="layer concept"><span class="lt">Concept</span>What the step is and why it matters. Read this if you're learning.</div>
+          <div class="layer do"><span class="lt">Do this</span>The exact commands and scripts to run. Read this if you just need to execute.</div>
+          <div class="layer deeper"><span class="lt">Go deeper</span>Advanced options, edge cases and follow-ups for experienced staff.</div>
+          <p>Each section is tagged by difficulty — <span class="badge badge-f">F · Foundation</span> everyone should manage, <span class="badge badge-p">P · Practitioner</span> needs some background, <span class="badge badge-a">A · Advanced</span> is for senior staff or supervised learning. Use the legend above to focus a single tier.</p>
+          <div class="callout note"><span class="ch">Beginners, start in the lab</span><p>Don't run anything from Parts I–II against production until you've done it once in the practice lab (<a href="#s2">Section 2.4</a>). Reading output correctly is a skill — break things in the lab, not in prod.</p></div>
+
+          <h3>Customization placeholders</h3>
+          <p>This manual uses variables in <code class="ph">&lt;ANGLE_BRACKETS&gt;</code>. Fill these in once for our environment and keep the master copy updated.</p>
+          <div class="tw"><table>
+            <thead><tr><th>Placeholder</th><th>Meaning</th><th>Our value</th></tr></thead>
+            <tbody>
+              <tr><td><code class="ph">&lt;EXTERNAL_RANGES&gt;</code></td><td>Public IP ranges / CIDRs we own</td><td><span class="todo">TODO</span></td></tr>
+              <tr><td><code class="ph">&lt;DOMAINS&gt;</code></td><td>Public domain names we own</td><td><span class="todo">TODO</span></td></tr>
+              <tr><td><code class="ph">&lt;INTERNAL_SUBNETS&gt;</code></td><td>Internal CIDRs, per VLAN</td><td><span class="todo">TODO</span></td></tr>
+              <tr><td><code class="ph">&lt;AD_DOMAIN&gt;</code></td><td>Active Directory domain</td><td><span class="todo">TODO</span></td></tr>
+              <tr><td><code class="ph">&lt;DC_IP&gt;</code></td><td>Domain Controller IP(s)</td><td><span class="todo">TODO</span></td></tr>
+              <tr><td><code class="ph">&lt;SCANNER_HOST&gt;</code></td><td>The machine you run scans from</td><td><span class="todo">TODO</span></td></tr>
+              <tr><td><code class="ph">&lt;AUTHORIZED_BY&gt;</code></td><td>Who signs off on active testing</td><td><span class="todo">TODO</span></td></tr>
+            </tbody>
+          </table></div>
+
+          <h3>Assumptions <span class="gear">⚙ revisit</span></h3>
+          <ul>
+            <li>Testing is limited to infrastructure <strong>we own or are explicitly authorized to test</strong>.</li>
+            <li>Scale, existing security stack (firewall / EDR / SIEM / IDS) and compliance drivers (PCI-DSS, ISO 27001, etc.) are <strong>not yet specified</strong>. Sections that depend on these carry a <span class="gear">⚙ customize</span> marker.</li>
+          </ul>
+        </section>
+
+        <!-- 1 -->
+        <section id="s1" class="lvl-f">
+          <h2 class="sec"><span class="snum">01</span> Ground rules: authorization &amp; safety <span class="badge badge-f">F · Foundation</span></h2>
+          <div class="layer concept"><span class="lt">Concept</span>An assessment uses the same tools an attacker would. The only thing separating a security audit from an intrusion is <strong>written authorization and a defined scope</strong>. This is not bureaucracy — it protects you personally and keeps testing from causing an outage.</div>
+          <div class="layer do"><span class="lt">Do this</span>
+            <p>Before any active scanning:</p>
+            <ol>
+              <li><strong>Get written authorization.</strong> A short Rules of Engagement document signed by <code class="ph">&lt;AUTHORIZED_BY&gt;</code> stating what will be tested, the ranges/domains in scope, the time window, who is running it, and an emergency contact.</li>
+              <li><strong>Define scope explicitly.</strong> List in-scope <code class="ph">&lt;EXTERNAL_RANGES&gt;</code> / <code class="ph">&lt;INTERNAL_SUBNETS&gt;</code>, and list <strong>out-of-scope</strong> systems (safety-critical, third-party hosted, shared tenancy).</li>
+              <li><strong>Confirm ownership of external targets.</strong> Only scan public IPs/domains registered to us — scanning IPs you don't own can be illegal even if you think they're yours (shared hosting is a common trap).</li>
+              <li><strong>Notify the NOC / on-call</strong> before internal scans, and record a baseline so you can attribute any disruption.</li>
+              <li><strong>Start non-disruptive.</strong> Aggressive scans can crash fragile devices (old printers, ICS/OT, legacy appliances). Begin gently and escalate deliberately.</li>
+            </ol>
+          </div>
+          <div class="layer deeper"><span class="lt">Go deeper</span>Keep an evidence log: timestamp every command and save raw output. If a system misbehaves you need to prove exactly what you sent and when. Store logs securely — scan output is a map of your weaknesses. A good external reference for structure is the <a href="https://owasp.org/www-project-web-security-testing-guide/" target="_blank" rel="noopener">OWASP Web Security Testing Guide</a>.</div>
+        </section>
+
+        <!-- 2 -->
+        <section id="s2" class="lvl-f">
+          <h2 class="sec"><span class="snum">02</span> Toolkit setup <span class="badge badge-f">F · Foundation</span></h2>
+          <div class="layer concept"><span class="lt">Concept</span>All tools below are open-source. You can install them piecemeal, but the fastest path is a purpose-built security distro that ships them pre-packaged.</div>
+
+          <h3>Recommended base</h3>
+          <p><a href="https://www.kali.org/" target="_blank" rel="noopener">Kali Linux</a> or <a href="https://www.parrotsec.org/" target="_blank" rel="noopener">Parrot OS Security</a> — Debian-based, ship with the toolset. Run as a VM or a dedicated laptop. Alternatively a clean Debian/Ubuntu host where you install tools yourself (more control, better for a permanent scanning server).</p>
+
+          <h3>Core install (Debian / Ubuntu base)</h3>
+          <pre><code><span class="c"># Package-manager tools</span>
+sudo apt update &amp;&amp; sudo apt install -y \
+  nmap masscan dnsutils whois \
+  nikto wafw00f whatweb \
+  smbclient ldap-utils snmp \
+  arp-scan netdiscover \
+  tcpdump wireshark \
+  hydra john hashcat \
+  python3-pip pipx git
+
+<span class="c"># Better installed from source / pipx</span>
+pipx install impacket        <span class="c"># AD/SMB scripting (GetUserSPNs.py, secretsdump.py)</span>
+pipx install netexec         <span class="c"># successor to CrackMapExec (command: nxc)</span>
+pipx install ssh-audit       <span class="c"># SSH server config auditing</span>
+pipx install dnsrecon        <span class="c"># DNS enumeration</span></code></pre>
+
+          <h3>Additional open-source tools</h3>
+          <div class="tw"><table>
+            <thead><tr><th>Tool</th><th>Purpose</th><th>Notes</th></tr></thead>
+            <tbody>
+              <tr><td><a href="https://www.greenbone.net/en/community-edition/" target="_blank" rel="noopener">Greenbone / OpenVAS (GVM)</a></td><td>Full vulnerability scanner</td><td>The open-source Nessus alternative. Best run as a dedicated VM.</td></tr>
+              <tr><td><a href="https://github.com/projectdiscovery/nuclei" target="_blank" rel="noopener">Nuclei</a></td><td>Template-based vuln / misconfig scanner</td><td>Fast, huge community template set.</td></tr>
+              <tr><td><a href="https://testssl.sh/" target="_blank" rel="noopener">testssl.sh</a></td><td>TLS/SSL configuration testing</td><td>Single bash script.</td></tr>
+              <tr><td><a href="https://github.com/laramies/theHarvester" target="_blank" rel="noopener">theHarvester</a></td><td>OSINT: emails, subdomains, hosts</td><td>Passive external recon.</td></tr>
+              <tr><td><a href="https://github.com/owasp-amass/amass" target="_blank" rel="noopener">Amass</a></td><td>Attack-surface / subdomain mapping</td><td>OWASP project.</td></tr>
+              <tr><td><a href="https://github.com/cddmp/enum4linux-ng" target="_blank" rel="noopener">enum4linux-ng</a></td><td>SMB / Windows enumeration</td><td>Python rewrite of enum4linux.</td></tr>
+              <tr><td><a href="https://github.com/ropnop/kerbrute" target="_blank" rel="noopener">kerbrute</a></td><td>Kerberos user enumeration</td><td>AD assessment.</td></tr>
+              <tr><td><a href="https://github.com/SpecterOps/BloodHound" target="_blank" rel="noopener">BloodHound CE</a> + <a href="https://github.com/dirkjanm/BloodHound.py" target="_blank" rel="noopener">bloodhound.py</a></td><td>AD attack-path mapping</td><td>Python or SharpHound collector.</td></tr>
+              <tr><td><a href="https://cisofy.com/lynis/" target="_blank" rel="noopener">Lynis</a></td><td>Linux/Unix host hardening audit</td><td><code>sudo apt install lynis</code>.</td></tr>
+              <tr><td><a href="https://www.open-scap.org/" target="_blank" rel="noopener">OpenSCAP</a> + SCAP content</td><td>CIS / STIG compliance scanning</td><td><code>oscap</code> CLI.</td></tr>
+            </tbody>
+          </table></div>
+
+          <h3>Build a practice lab</h3>
+          <div class="layer concept"><span class="lt">Concept</span>You will misread output and misuse flags while learning. Do that where it's safe.</div>
+          <div class="layer do"><span class="lt">Do this</span>Stand up isolated VMs on a host-only network: a vulnerable target (Metasploitable or a <a href="https://www.vulnhub.com/" target="_blank" rel="noopener">VulnHub</a> image), and a mini-AD — a Windows Server DC + client, or the <a href="https://github.com/Orange-Cyberdefense/GOAD" target="_blank" rel="noopener">GOAD</a> ("Game of Active Directory") lab. Point your scanner at these until the commands feel routine.</div>
+        </section>
+
+        <!-- PART I -->
+        <div class="part lvl-p" id="part1">
+          <div class="pnum">Part I</div>
+          <h2>External assessment</h2>
+          <p>The attacker's view from the internet. Goal: know exactly what we expose and whether it's defensible.</p>
+        </div>
+
+        <!-- 3 -->
+        <section id="s3" class="lvl-f">
+          <h2 class="sec"><span class="snum">03</span> Map the external footprint <span class="badge badge-f">F · Foundation</span></h2>
+          <div class="layer concept"><span class="lt">Concept</span>You can't protect assets you don't know you have. Attackers start by inventorying everything you expose — so should you.</div>
+          <div class="layer do"><span class="lt">Do this</span>
+            <p>Collect the authoritative list of <code class="ph">&lt;EXTERNAL_RANGES&gt;</code> and <code class="ph">&lt;DOMAINS&gt;</code> from whoever manages DNS/hosting, then confirm ownership:</p>
+            <pre><code>whois &lt;EXTERNAL_RANGES&gt;   <span class="c"># confirm the block is registered to us</span>
+whois &lt;DOMAINS&gt;           <span class="c"># registrar, expiry, contacts</span></code></pre>
+          </div>
+          <div class="layer deeper"><span class="lt">Go deeper</span>Cross-check against billing and asset records. "Shadow IT" — a forgotten VPS or marketing microsite — is a classic entry point precisely because nobody remembers to patch it.</div>
+        </section>
+
+        <!-- 4 -->
+        <section id="s4" class="lvl-p">
+          <h2 class="sec"><span class="snum">04</span> Passive reconnaissance (OSINT) <span class="badge badge-p">P · Practitioner</span></h2>
+          <div class="layer concept"><span class="lt">Concept</span><em>Passive</em> means you gather what's already public without touching our servers — no packets to us, nothing logged on our side. This mirrors an attacker's quiet first phase and often reveals subdomains, leaked emails and exposed services you didn't know were public.</div>
+          <div class="layer do"><span class="lt">Do this</span>
+            <pre><code><span class="c"># Emails, subdomains, hosts referencing our domain</span>
+theHarvester -d &lt;DOMAINS&gt; -b all
+
+<span class="c"># Attack-surface / subdomain enumeration (passive mode)</span>
+amass enum -passive -d &lt;DOMAINS&gt;
+
+<span class="c"># Certificate transparency logs reveal hidden subdomains — search crt.sh</span></code></pre>
+            <p>Certificate-transparency lookups: <a href="https://crt.sh/" target="_blank" rel="noopener">crt.sh</a>.</p>
+          </div>
+          <div class="layer deeper"><span class="lt">Go deeper</span>Search for leaked credentials tied to our domains in public breach indexes, and check whether staff emails appear in known breaches (e.g. <a href="https://haveibeenpwned.com/" target="_blank" rel="noopener">Have I Been Pwned</a>). This informs password-reset and MFA priorities.</div>
+          <div class="callout note"><span class="ch">Reading it</span><p>Every subdomain returned is a potential target. Flag anything unexpected — <code>dev.</code>, <code>test.</code>, <code>old.</code>, <code>vpn.</code>, <code>admin.</code> — as non-production hosts are frequently unpatched.</p></div>
+        </section>
+
+        <!-- 5 -->
+        <section id="s5" class="lvl-p">
+          <h2 class="sec"><span class="snum">05</span> DNS enumeration <span class="badge badge-p">P · Practitioner</span></h2>
+          <div class="layer concept"><span class="lt">Concept</span>DNS is the phone book of your external presence. Misconfigurations — open zone transfers, stale records — leak internal structure.</div>
+          <div class="layer do"><span class="lt">Do this</span>
+            <pre><code>dnsrecon -d &lt;DOMAINS&gt;                    <span class="c"># records, subdomains, misconfigs</span>
+dig axfr &lt;DOMAINS&gt; @&lt;their-nameserver&gt;   <span class="c"># zone transfer test — should FAIL</span></code></pre>
+          </div>
+          <div class="callout note"><span class="ch">Reading it</span><p>A successful zone transfer (<code>axfr</code> returns the whole zone) is a finding — it hands attackers your entire DNS layout. It should be refused.</p></div>
+        </section>
+
+        <!-- 6 -->
+        <section id="s6" class="lvl-f">
+          <h2 class="sec"><span class="snum">06</span> Email security posture <span class="badge badge-f">F · Foundation</span> <span class="gear">⚙ customize</span></h2>
+          <div class="layer concept"><span class="lt">Concept</span>SPF, DKIM and DMARC records decide whether attackers can spoof mail from your domain. Cheap to check, high impact for phishing resistance.</div>
+          <div class="layer do"><span class="lt">Do this</span>
+            <pre><code>dig +short TXT &lt;DOMAINS&gt;           <span class="c"># look for the v=spf1 record</span>
+dig +short TXT _dmarc.&lt;DOMAINS&gt;    <span class="c"># look for the v=DMARC1 record</span></code></pre>
+            <p>Background: <a href="https://dmarc.org/" target="_blank" rel="noopener">dmarc.org</a>.</p>
+          </div>
+          <div class="callout note"><span class="ch">Reading it</span><p>Missing SPF/DMARC, or DMARC set to <code>p=none</code>, means anyone can spoof your domain in email. Recommend moving toward <code>p=quarantine</code> / <code>p=reject</code> after a monitoring period.</p></div>
+        </section>
+
+        <!-- 7 -->
+        <section id="s7" class="lvl-p">
+          <h2 class="sec"><span class="snum">07</span> External host discovery &amp; port scanning <span class="badge badge-p">P · Practitioner</span></h2>
+          <div class="layer concept"><span class="lt">Concept</span>Now you actively probe in-scope external IPs to see which are alive and what ports answer. An open port is an exposed service, which is an attack surface. <strong>This is active</strong> — authorization and scope (<a href="#s1">Section 1</a>) must be in place.</div>
+          <div class="layer do"><span class="lt">Do this</span>
+            <pre><code><span class="c"># Fast, wide sweep to find live hosts / open ports</span>
+sudo masscan &lt;EXTERNAL_RANGES&gt; -p1-65535 --rate 1000 -oL masscan-ext.txt
+
+<span class="c"># Detailed follow-up with nmap (service + version detection)</span>
+sudo nmap -sV -sC -p&lt;ports-from-masscan&gt; -oA nmap-ext &lt;target-ips&gt;</code></pre>
+            <p>Flags: <code>-sV</code> version detection, <code>-sC</code> default safe scripts, <code>-oA</code> save all formats. Start at <code>--rate 1000</code> (gentle) — never blast max rate at a production edge. Reference: <a href="https://nmap.org/book/man.html" target="_blank" rel="noopener">nmap manual</a>, <a href="https://github.com/robertdavidgraham/masscan" target="_blank" rel="noopener">masscan</a>.</p>
+          </div>
+          <div class="layer deeper"><span class="lt">Go deeper</span>Compare results to firewall rules. Every externally-open port should map to an intentional, documented rule. Undocumented exposure = misconfiguration or shadow IT.</div>
+          <div class="callout stop"><span class="ch">Priority finding</span><p>Externally you should generally see <em>only</em> deliberately published services (443 on a web server, 25 on mail). Anything else — 3389 (RDP), 445 (SMB), 22 (SSH), database ports — reachable from the internet is a top-priority question to answer.</p></div>
+        </section>
+
+        <!-- 8 -->
+        <section id="s8" class="lvl-p">
+          <h2 class="sec"><span class="snum">08</span> Service &amp; web surface testing <span class="badge badge-p">P · Practitioner</span></h2>
+          <div class="layer concept"><span class="lt">Concept</span>Once you know what's listening, test how well it's configured — outdated software, weak TLS, exposed admin panels, known CVEs.</div>
+          <div class="layer do"><span class="lt">Do this</span>
+            <pre><code>testssl.sh https://&lt;host&gt;    <span class="c"># TLS/SSL config and certificate health</span>
+nikto -h https://&lt;host&gt;      <span class="c"># web server misconfig / known-issue scan</span>
+whatweb https://&lt;host&gt;       <span class="c"># fingerprint the tech stack</span>
+wafw00f  https://&lt;host&gt;      <span class="c"># detect a web application firewall</span>
+nuclei -u https://&lt;host&gt;     <span class="c"># template checks for CVEs and misconfigs</span></code></pre>
+            <p>Tools: <a href="https://github.com/sullo/nikto" target="_blank" rel="noopener">Nikto</a>, <a href="https://github.com/urbanadventurer/WhatWeb" target="_blank" rel="noopener">WhatWeb</a>, <a href="https://github.com/EnableSecurity/wafw00f" target="_blank" rel="noopener">wafw00f</a>.</p>
+          </div>
+          <div class="callout note"><span class="ch">Reading it</span><p><code>testssl.sh</code> flags weak protocols (SSLv3, TLS 1.0/1.1), weak ciphers and expired/self-signed certs. <code>nuclei</code>/<code>nikto</code> surface known-vulnerable versions and exposed paths — verify each before treating it as confirmed (see <a href="#s19">Section 19</a>).</p></div>
+        </section>
+
+        <!-- 9 -->
+        <section id="s9" class="lvl-p">
+          <h2 class="sec"><span class="snum">09</span> External vulnerability scan <span class="badge badge-p">P · Practitioner</span> <span class="gear">⚙ customize</span></h2>
+          <div class="layer concept"><span class="lt">Concept</span>A vulnerability scanner (<a href="https://www.greenbone.net/en/community-edition/" target="_blank" rel="noopener">Greenbone / OpenVAS</a>) automates checking every exposed service against a database of known vulnerabilities and produces a prioritized report — the backbone of a repeatable program.</div>
+          <div class="layer do"><span class="lt">Do this</span>
+            <ol>
+              <li>Deploy Greenbone/OpenVAS as a VM and let the feeds sync (first sync is slow).</li>
+              <li>Create a target for <code class="ph">&lt;EXTERNAL_RANGES&gt;</code> and run a <strong>Full and Fast</strong> scan.</li>
+              <li>Export the report (PDF/CSV) for the analysis phase (<a href="#part3">Part III</a>).</li>
+            </ol>
+          </div>
+          <div class="callout warn"><span class="ch">⚙ Customize</span><p>If we adopt a commercial scanner later, this section changes. For now, OpenVAS is the open-source standard.</p></div>
+        </section>
+
+        <!-- PART II -->
+        <div class="part lvl-p" id="part2">
+          <div class="pnum">Part II</div>
+          <h2>Internal assessment</h2>
+          <p>The view of an attacker who already has a foothold inside — a phished user, a rogue device, or malware. Internal networks are usually flatter and softer than the perimeter, so this is where the big findings live.</p>
+        </div>
+
+        <!-- 10 -->
+        <section id="s10" class="lvl-f">
+          <h2 class="sec"><span class="snum">10</span> Position your scanner <span class="badge badge-f">F · Foundation</span></h2>
+          <div class="layer concept"><span class="lt">Concept</span>Segmentation matters: what you can see depends on which VLAN you're plugged into. Run scans from a host on each relevant segment to test both reachability and segmentation.</div>
+          <div class="layer do"><span class="lt">Do this</span>Place <code class="ph">&lt;SCANNER_HOST&gt;</code> on a segment, note its IP/subnet, and record which other <code class="ph">&lt;INTERNAL_SUBNETS&gt;</code> it can reach. The reachability map itself is a segmentation finding.</div>
+        </section>
+
+        <!-- 11 -->
+        <section id="s11" class="lvl-f">
+          <h2 class="sec"><span class="snum">11</span> Layer-2 / local discovery <span class="badge badge-f">F · Foundation</span></h2>
+          <div class="layer concept"><span class="lt">Concept</span>On your local subnet you can discover hosts at the data-link layer, which finds devices even if they don't answer higher-level pings.</div>
+          <div class="layer do"><span class="lt">Do this</span>
+            <pre><code>sudo arp-scan --localnet               <span class="c"># everything on the local segment</span>
+sudo netdiscover -r &lt;INTERNAL_SUBNETS&gt;</code></pre>
+          </div>
+          <div class="layer deeper"><span class="lt">Go deeper</span>Passive listening: <a href="https://github.com/lgandx/Responder" target="_blank" rel="noopener">Responder</a> in <strong>analyze-only</strong> mode (<code>responder -A -I &lt;iface&gt;</code>) <em>listens</em> for LLMNR/NBT-NS/mDNS traffic without answering. Seeing this traffic means the network is vulnerable to name-poisoning credential theft — a very common weakness.</div>
+          <div class="callout stop"><span class="ch">Do not poison production</span><p>Never run Responder in active/poisoning mode on production without explicit authorization. Analyze mode (<code>-A</code>) is the safe diagnostic.</p></div>
+        </section>
+
+        <!-- 12 -->
+        <section id="s12" class="lvl-p">
+          <h2 class="sec"><span class="snum">12</span> Internal host &amp; port sweep <span class="badge badge-p">P · Practitioner</span></h2>
+          <div class="layer concept"><span class="lt">Concept</span>Same idea as external scanning, but internally you'll find far more — and the expectation flips: many internal services are normal, so you're hunting the <em>unexpected and the unpatched</em>.</div>
+          <div class="layer do"><span class="lt">Do this</span>
+            <pre><code>sudo nmap -sn &lt;INTERNAL_SUBNETS&gt; -oA internal-hostsweep   <span class="c"># live hosts</span>
+sudo nmap -sV -sC -O &lt;INTERNAL_SUBNETS&gt; -oA internal-services</code></pre>
+            <p><code>-O</code> adds OS detection — useful for spotting end-of-life systems (Windows 7 / Server 2008, unsupported Linux).</p>
+          </div>
+          <div class="callout note"><span class="ch">Reading it</span><p>Prioritize legacy/EOL operating systems, management ports open network-wide (RDP/SSH/WinRM), and databases or file shares reachable from user VLANs.</p></div>
+        </section>
+
+        <!-- 13 -->
+        <section id="s13" class="lvl-p">
+          <h2 class="sec"><span class="snum">13</span> Windows &amp; SMB enumeration <span class="badge badge-p">P · Practitioner</span></h2>
+          <div class="layer concept"><span class="lt">Concept</span>SMB (port 445) enumeration reveals shares, users and policy — and misconfigured shares are a top internal risk for data exposure and lateral movement.</div>
+          <div class="layer do"><span class="lt">Do this</span>
+            <pre><code>enum4linux-ng -A &lt;host&gt;           <span class="c"># shares, users, OS, policies</span>
+smbclient -L //&lt;host&gt;/ -N        <span class="c"># list shares (-N = null/anonymous)</span>
+nxc smb &lt;INTERNAL_SUBNETS&gt;        <span class="c"># sweep SMB; flag signing &amp; guest access</span></code></pre>
+            <p>Tool: <a href="https://github.com/Pennyw0rth/NetExec" target="_blank" rel="noopener">NetExec</a> (<code>nxc</code>).</p>
+          </div>
+          <div class="callout stop"><span class="ch">Priority findings</span><p>Anonymous/null access to shares = data exposure. SMB signing not required = network vulnerable to relay attacks. SMBv1 enabled anywhere = high priority; it should be disabled everywhere.</p></div>
+        </section>
+
+        <!-- 14 -->
+        <section id="s14" class="lvl-a">
+          <h2 class="sec"><span class="snum">14</span> Active Directory review <span class="badge badge-a">A · Advanced</span></h2>
+          <div class="layer concept"><span class="lt">Concept</span>AD is the crown jewels — compromise of the domain usually means game over. This step maps how a foothold could escalate to domain-wide control. Everything here is <strong>authorized defensive auditing</strong> of <code class="ph">&lt;AD_DOMAIN&gt;</code>, to find and fix misconfigurations before an attacker does.</div>
+          <div class="layer do"><span class="lt">Do this</span>
+            <p>With valid, authorized domain credentials:</p>
+            <pre><code><span class="c"># User enumeration / weak Kerberos pre-auth (needs a userlist)</span>
+kerbrute userenum -d &lt;AD_DOMAIN&gt; --dc &lt;DC_IP&gt; users.txt
+
+<span class="c"># Collect AD relationships, then review paths in BloodHound CE</span>
+bloodhound-python -d &lt;AD_DOMAIN&gt; -u &lt;user&gt; -p &lt;pass&gt; -ns &lt;DC_IP&gt; -c All
+
+<span class="c"># Identify service accounts exposed to Kerberoasting (auditable misconfig)</span>
+GetUserSPNs.py &lt;AD_DOMAIN&gt;/&lt;user&gt;:&lt;pass&gt; -dc-ip &lt;DC_IP&gt;
+
+<span class="c"># Identify accounts with Kerberos pre-auth disabled (AS-REP roastable)</span>
+GetNPUsers.py &lt;AD_DOMAIN&gt;/ -usersfile users.txt -dc-ip &lt;DC_IP&gt;</code></pre>
+            <p>Tools: <a href="https://github.com/SpecterOps/BloodHound" target="_blank" rel="noopener">BloodHound CE</a>, <a href="https://github.com/fortra/impacket" target="_blank" rel="noopener">Impacket</a>, <a href="https://github.com/ropnop/kerbrute" target="_blank" rel="noopener">kerbrute</a>.</p>
+          </div>
+          <div class="layer deeper"><span class="lt">Go deeper</span>BloodHound shows the shortest paths to Domain Admin — those paths <em>are</em> your remediation list. Service accounts with weak passwords and SPNs, and accounts with pre-auth disabled, are concrete fixes: rotate to strong passwords / gMSAs and re-enable pre-auth. The point is to close these, not exploit them.</div>
+          <div class="callout warn"><span class="ch">Scope note</span><p>Cracking any hashes obtained (<a href="#s18">Section 18</a>) is only for verifying policy strength on <strong>our own</strong> accounts, under authorization. Handle credential material as sensitive and destroy it after the assessment.</p></div>
+        </section>
+
+        <!-- 15 -->
+        <section id="s15" class="lvl-p">
+          <h2 class="sec"><span class="snum">15</span> Internal vulnerability scan <span class="badge badge-p">P · Practitioner</span> <span class="gear">⚙ customize</span></h2>
+          <div class="layer concept"><span class="lt">Concept</span>Run Greenbone/OpenVAS across <code class="ph">&lt;INTERNAL_SUBNETS&gt;</code>. Internal scans typically return far more than external ones because internal hosts are patched less aggressively.</div>
+          <div class="layer do"><span class="lt">Do this</span>Create internal targets and run <strong>authenticated</strong> scans where possible (give the scanner read credentials) — authenticated scans see missing patches that unauthenticated scans miss. Export reports for <a href="#part3">Part III</a>.</div>
+        </section>
+
+        <!-- 16 -->
+        <section id="s16" class="lvl-p">
+          <h2 class="sec"><span class="snum">16</span> Host hardening audits <span class="badge badge-p">P · Practitioner</span></h2>
+          <div class="layer concept"><span class="lt">Concept</span>Vuln scans find <em>missing patches</em>; hardening audits find <em>insecure configuration</em> — weak SSH, permissive permissions, disabled logging. Both matter.</div>
+          <div class="layer do"><span class="lt">Do this</span>
+            <p>Linux / Unix:</p>
+            <pre><code>sudo lynis audit system   <span class="c"># hardening index + specific warnings</span>
+ssh-audit &lt;host&gt;          <span class="c"># SSH ciphers / algorithms / config</span></code></pre>
+            <p>Windows &amp; general, via <a href="https://www.open-scap.org/" target="_blank" rel="noopener">OpenSCAP</a> + CIS content:</p>
+            <pre><code>oscap xccdf eval --profile &lt;cis-profile&gt; --results out.xml &lt;scap-content.xml&gt;</code></pre>
+            <p>Tools: <a href="https://cisofy.com/lynis/" target="_blank" rel="noopener">Lynis</a>, <a href="https://github.com/jtesta/ssh-audit" target="_blank" rel="noopener">ssh-audit</a>. Benchmarks: <a href="https://www.cisecurity.org/cis-benchmarks" target="_blank" rel="noopener">CIS Benchmarks</a>.</p>
+          </div>
+          <div class="callout warn"><span class="ch">⚙ Customize</span><p>Set the OpenSCAP profile to our chosen standard. Good compliance evidence if a framework is ever in scope.</p></div>
+        </section>
+
+        <!-- 17 -->
+        <section id="s17" class="lvl-p">
+          <h2 class="sec"><span class="snum">17</span> Network device audits <span class="badge badge-p">P · Practitioner</span></h2>
+          <div class="layer concept"><span class="lt">Concept</span>Routers, switches and firewalls are high-value: one weak device can undo all host hardening. They're also frequently left on defaults.</div>
+          <div class="layer do"><span class="lt">Do this</span>
+            <pre><code>snmpwalk -v2c -c public &lt;device-ip&gt;   <span class="c"># if 'public' works, that's a finding</span>
+ssh-audit &lt;device-ip&gt;                 <span class="c"># SSH config on the mgmt interface</span>
+sudo nmap -sV &lt;device-ip&gt;             <span class="c"># confirm only expected mgmt ports</span></code></pre>
+          </div>
+          <div class="layer deeper"><span class="lt">Go deeper</span>Highest value is a manual config review: export each device config and check for default/weak credentials, telnet or HTTP management, SNMP <code>public</code>/<code>private</code>, missing ACLs on management interfaces, and unencrypted management. Compare against the <a href="https://www.cisecurity.org/cis-benchmarks" target="_blank" rel="noopener">CIS Benchmark</a> for the platform.</div>
+        </section>
+
+        <!-- 18 -->
+        <section id="s18" class="lvl-a">
+          <h2 class="sec"><span class="snum">18</span> Traffic &amp; segmentation validation <span class="badge badge-a">A · Advanced</span></h2>
+          <div class="layer concept"><span class="lt">Concept</span>Capturing traffic reveals cleartext protocols and validates that VLAN segmentation actually works.</div>
+          <div class="layer do"><span class="lt">Do this</span>
+            <pre><code><span class="c"># Capture (authorized, on a SPAN port or your own host)</span>
+sudo tcpdump -i &lt;iface&gt; -w capture.pcap
+<span class="c"># Open capture.pcap in Wireshark; filter for telnet, ftp, http basic-auth</span></code></pre>
+            <p>Tools: <a href="https://www.tcpdump.org/" target="_blank" rel="noopener">tcpdump</a>, <a href="https://www.wireshark.org/" target="_blank" rel="noopener">Wireshark</a>.</p>
+            <p><strong>Segmentation test:</strong> from a user VLAN, attempt to reach hosts you <em>shouldn't</em> (server / OT / management subnets) using the <a href="#s12">Section 12</a> sweeps.</p>
+          </div>
+          <div class="layer deeper"><span class="lt">Go deeper</span>Password-policy verification: if auditing password strength on our own accounts under authorization, crack a controlled hash sample offline with <a href="https://hashcat.net/hashcat/" target="_blank" rel="noopener">hashcat</a> / <a href="https://www.openwall.com/john/" target="_blank" rel="noopener">John the Ripper</a> to measure real-world strength against policy. This measures policy effectiveness — it is not for gaining access. Treat all hash material as sensitive and delete it when done.</div>
+          <div class="callout stop"><span class="ch">Finding</span><p>Successful reachability across segments that policy says should be blocked is a finding.</p></div>
+        </section>
+
+        <!-- PART III -->
+        <div class="part lvl-f" id="part3">
+          <div class="pnum">Part III</div>
+          <h2>Analysis, reporting &amp; remediation</h2>
+          <p>Scanning produces data. Value comes from turning data into prioritized, tracked fixes — on a repeating cadence.</p>
+        </div>
+
+        <!-- 19 -->
+        <section id="s19" class="lvl-p">
+          <h2 class="sec"><span class="snum">19</span> Triage &amp; false positives <span class="badge badge-p">P · Practitioner</span></h2>
+          <div class="layer concept"><span class="lt">Concept</span>Automated scanners over-report. Every "critical" must be validated before it enters a report, or the team loses trust in the process.</div>
+          <div class="layer do"><span class="lt">Do this</span>For each significant finding confirm: Is the service actually running and reachable? Is the vulnerable version actually deployed? Is there a compensating control (firewall, EDR — <span class="gear">⚙ customize</span>)? Only validated findings advance.</div>
+        </section>
+
+        <!-- 20 -->
+        <section id="s20" class="lvl-f">
+          <h2 class="sec"><span class="snum">20</span> Risk scoring &amp; prioritization <span class="badge badge-f">F · Foundation</span></h2>
+          <div class="layer concept"><span class="lt">Concept</span>You can't fix everything at once. Prioritize by real risk, not just scanner severity.</div>
+          <div class="layer do"><span class="lt">Do this</span>For each validated finding record its <a href="https://www.first.org/cvss/" target="_blank" rel="noopener">CVSS</a> score, exposure (internet-facing vs internal-only), exploitability (public exploit available?) and asset value. A medium-severity flaw on an internet-facing server usually outranks a "critical" on an isolated test box.</div>
+        </section>
+
+        <!-- 21 -->
+        <section id="s21" class="lvl-f">
+          <h2 class="sec"><span class="snum">21</span> Reporting <span class="badge badge-f">F · Foundation</span> <span class="gear">⚙ customize</span></h2>
+          <div class="layer concept"><span class="lt">Concept</span>The report is the deliverable. It must serve both leadership (summary/risk) and engineers (how to fix).</div>
+          <div class="layer do"><span class="lt">Do this</span>
+            <p>Structure each report as:</p>
+            <ol>
+              <li><strong>Executive summary</strong> — overall posture and top risks, in plain language.</li>
+              <li><strong>Scope &amp; methodology</strong> — what was tested, when, how (reference this manual).</li>
+              <li><strong>Findings</strong> — each with description, evidence, affected assets, risk rating and <strong>specific remediation steps</strong>.</li>
+              <li><strong>Appendix</strong> — raw scan outputs, tool versions, timestamps.</li>
+            </ol>
+          </div>
+          <div class="callout warn"><span class="ch">⚙ Customize</span><p>If a compliance framework applies, add a control-mapping section (e.g. map findings to ISO 27001 / PCI-DSS controls).</p></div>
+        </section>
+
+        <!-- 22 -->
+        <section id="s22" class="lvl-f">
+          <h2 class="sec"><span class="snum">22</span> Remediation &amp; retest <span class="badge badge-f">F · Foundation</span></h2>
+          <div class="layer concept"><span class="lt">Concept</span>A finding isn't closed until it's fixed <em>and verified fixed</em>.</div>
+          <div class="layer do"><span class="lt">Do this</span>Log every finding in the ticketing system with an owner and a due date (severity-based SLAs). After remediation, re-run the specific test to confirm closure. Keep before/after evidence.</div>
+        </section>
+
+        <!-- 23 -->
+        <section id="s23" class="lvl-f">
+          <h2 class="sec"><span class="snum">23</span> Cadence &amp; metrics <span class="badge badge-f">F · Foundation</span></h2>
+          <div class="layer concept"><span class="lt">Concept</span>Security posture decays — new systems, new CVEs, config drift. A one-time assessment is nearly worthless; a <em>program</em> is what protects you.</div>
+          <div class="layer do"><span class="lt">Do this</span>
+            <p>Suggested cadence <span class="gear">⚙ customize</span>:</p>
+            <ul>
+              <li>External vuln scan — <strong>monthly</strong> (or continuous for the perimeter).</li>
+              <li>Internal vuln scan — <strong>quarterly</strong>.</li>
+              <li>Full internal assessment (Parts I–II) — <strong>annually</strong>, plus after any major change.</li>
+              <li>Config / hardening audits — <strong>quarterly</strong> or gated in change management.</li>
+            </ul>
+            <p>Track over time: open findings by severity, mean time to remediate, % of assets scanned, recurrence rate. These trends prove the program is working.</p>
+          </div>
+        </section>
+
+        <!-- APPENDIX A -->
+        <section id="a-cmd" class="lvl-f">
+          <h2 class="sec"><span class="snum">A</span> Command quick reference</h2>
+          <pre><code><span class="c"># DISCOVERY</span>
+whois &lt;target&gt;                        <span class="c"># ownership</span>
+theHarvester -d &lt;domain&gt; -b all       <span class="c"># passive OSINT</span>
+dnsrecon -d &lt;domain&gt;                  <span class="c"># DNS enum</span>
+arp-scan --localnet                  <span class="c"># L2 host discovery</span>
+nmap -sn &lt;cidr&gt;                       <span class="c"># ping/host sweep</span>
+
+<span class="c"># PORT / SERVICE SCANNING</span>
+masscan &lt;cidr&gt; -p1-65535 --rate 1000  <span class="c"># fast port sweep</span>
+nmap -sV -sC -oA out &lt;targets&gt;        <span class="c"># service+version+scripts</span>
+
+<span class="c"># WEB / TLS</span>
+testssl.sh https://&lt;host&gt;             <span class="c"># TLS audit</span>
+nikto -h https://&lt;host&gt;               <span class="c"># web misconfig</span>
+nuclei -u https://&lt;host&gt;              <span class="c"># CVE/misconfig templates</span>
+
+<span class="c"># WINDOWS / AD / SMB</span>
+enum4linux-ng -A &lt;host&gt;               <span class="c"># SMB/Windows enum</span>
+nxc smb &lt;cidr&gt;                        <span class="c"># SMB sweep (signing, guest)</span>
+bloodhound-python -d &lt;dom&gt; -u &lt;u&gt; -p &lt;p&gt; -ns &lt;dc&gt; -c All
+GetUserSPNs.py &lt;dom&gt;/&lt;u&gt;:&lt;p&gt; -dc-ip &lt;dc&gt;   <span class="c"># Kerberoastable accounts</span>
+
+<span class="c"># HARDENING / DEVICES</span>
+lynis audit system                   <span class="c"># Linux hardening</span>
+ssh-audit &lt;host&gt;                      <span class="c"># SSH config</span>
+snmpwalk -v2c -c public &lt;device&gt;      <span class="c"># default SNMP check</span>
+oscap xccdf eval --profile &lt;p&gt; &lt;content&gt;   <span class="c"># CIS/STIG compliance</span></code></pre>
+        </section>
+
+        <!-- APPENDIX B -->
+        <section id="a-links" class="lvl-f">
+          <h2 class="sec"><span class="snum">B</span> Tool &amp; reference links</h2>
+          <div class="tw"><table>
+            <thead><tr><th>Category</th><th>Resource</th></tr></thead>
+            <tbody>
+              <tr><td>Distros</td><td><a href="https://www.kali.org/" target="_blank" rel="noopener">Kali Linux</a>, <a href="https://www.parrotsec.org/" target="_blank" rel="noopener">Parrot OS</a></td></tr>
+              <tr><td>Scanning</td><td><a href="https://nmap.org/" target="_blank" rel="noopener">Nmap</a>, <a href="https://github.com/robertdavidgraham/masscan" target="_blank" rel="noopener">masscan</a></td></tr>
+              <tr><td>Recon / OSINT</td><td><a href="https://github.com/laramies/theHarvester" target="_blank" rel="noopener">theHarvester</a>, <a href="https://github.com/owasp-amass/amass" target="_blank" rel="noopener">Amass</a>, <a href="https://github.com/darkoperator/dnsrecon" target="_blank" rel="noopener">dnsrecon</a>, <a href="https://crt.sh/" target="_blank" rel="noopener">crt.sh</a></td></tr>
+              <tr><td>Web / TLS</td><td><a href="https://testssl.sh/" target="_blank" rel="noopener">testssl.sh</a>, <a href="https://github.com/sullo/nikto" target="_blank" rel="noopener">Nikto</a>, <a href="https://github.com/projectdiscovery/nuclei" target="_blank" rel="noopener">Nuclei</a>, <a href="https://github.com/urbanadventurer/WhatWeb" target="_blank" rel="noopener">WhatWeb</a>, <a href="https://github.com/EnableSecurity/wafw00f" target="_blank" rel="noopener">wafw00f</a></td></tr>
+              <tr><td>Vuln scanning</td><td><a href="https://www.greenbone.net/en/community-edition/" target="_blank" rel="noopener">Greenbone / OpenVAS</a></td></tr>
+              <tr><td>Windows / AD</td><td><a href="https://github.com/cddmp/enum4linux-ng" target="_blank" rel="noopener">enum4linux-ng</a>, <a href="https://github.com/Pennyw0rth/NetExec" target="_blank" rel="noopener">NetExec</a>, <a href="https://github.com/fortra/impacket" target="_blank" rel="noopener">Impacket</a>, <a href="https://github.com/ropnop/kerbrute" target="_blank" rel="noopener">kerbrute</a>, <a href="https://github.com/SpecterOps/BloodHound" target="_blank" rel="noopener">BloodHound CE</a>, <a href="https://github.com/dirkjanm/BloodHound.py" target="_blank" rel="noopener">bloodhound.py</a></td></tr>
+              <tr><td>Hardening</td><td><a href="https://cisofy.com/lynis/" target="_blank" rel="noopener">Lynis</a>, <a href="https://www.open-scap.org/" target="_blank" rel="noopener">OpenSCAP</a>, <a href="https://github.com/jtesta/ssh-audit" target="_blank" rel="noopener">ssh-audit</a></td></tr>
+              <tr><td>Traffic</td><td><a href="https://www.wireshark.org/" target="_blank" rel="noopener">Wireshark</a>, <a href="https://www.tcpdump.org/" target="_blank" rel="noopener">tcpdump</a>, <a href="https://github.com/lgandx/Responder" target="_blank" rel="noopener">Responder</a></td></tr>
+              <tr><td>Password audit</td><td><a href="https://hashcat.net/hashcat/" target="_blank" rel="noopener">hashcat</a>, <a href="https://www.openwall.com/john/" target="_blank" rel="noopener">John the Ripper</a></td></tr>
+              <tr><td>Frameworks</td><td><a href="https://owasp.org/www-project-web-security-testing-guide/" target="_blank" rel="noopener">OWASP WSTG</a>, <a href="https://www.cisecurity.org/cis-benchmarks" target="_blank" rel="noopener">CIS Benchmarks</a>, <a href="https://www.first.org/cvss/" target="_blank" rel="noopener">CVSS</a></td></tr>
+              <tr><td>Practice labs</td><td><a href="https://www.vulnhub.com/" target="_blank" rel="noopener">VulnHub</a>, <a href="https://github.com/Orange-Cyberdefense/GOAD" target="_blank" rel="noopener">GOAD</a></td></tr>
+            </tbody>
+          </table></div>
+        </section>
+
+        <!-- APPENDIX C -->
+        <section id="a-gloss" class="lvl-f">
+          <h2 class="sec"><span class="snum">C</span> Glossary <span class="badge badge-f">for newer staff</span></h2>
+          <ul>
+            <li><strong>Port / service</strong> — a numbered channel a program listens on (443 = HTTPS). Open ports are entry points.</li>
+            <li><strong>Passive vs active recon</strong> — passive uses only public info (no packets to the target); active sends probes to the target.</li>
+            <li><strong>CVE / CVSS</strong> — a CVE is a catalogued known vulnerability; CVSS is its 0–10 severity score.</li>
+            <li><strong>Enumeration</strong> — extracting detail (users, shares, versions) from a service.</li>
+            <li><strong>Lateral movement / privilege escalation</strong> — moving between machines / gaining higher rights once inside.</li>
+            <li><strong>Kerberoasting</strong> — abusing weak AD service-account passwords; auditable and fixable.</li>
+            <li><strong>Segmentation</strong> — dividing the network so a breach in one zone can't reach others.</li>
+          </ul>
+        </section>
+
+        <!-- APPENDIX D -->
+        <section id="a-check" class="lvl-f">
+          <h2 class="sec"><span class="snum">D</span> Safe-scanning checklist</h2>
+          <ul class="check">
+            <li>Written authorization signed by <code class="ph">&lt;AUTHORIZED_BY&gt;</code></li>
+            <li>Scope (in / out) confirmed against <code class="ph">&lt;EXTERNAL_RANGES&gt;</code> / <code class="ph">&lt;INTERNAL_SUBNETS&gt;</code></li>
+            <li>External targets confirmed as owned by us</li>
+            <li>NOC / on-call notified; maintenance window if needed</li>
+            <li>Fragile / OT / legacy systems identified and excluded or handled gently</li>
+            <li>Start with gentle rates; escalate deliberately</li>
+            <li>All commands and raw output logged with timestamps</li>
+            <li>Scan data and credential material stored securely, deleted when done</li>
+          </ul>
+        </section>
+
+        <p class="footer"><em>This is a living document. Keep the placeholder table and the ⚙-marked sections up to date as our environment, tooling and compliance requirements evolve.</em></p>
+
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+  // Mobile drawer
+  var body=document.body, menuBtn=document.getElementById('menuBtn'), scrim=document.getElementById('scrim');
+  function closeNav(){body.classList.remove('nav-open');}
+  if(menuBtn){menuBtn.addEventListener('click',function(){body.classList.toggle('nav-open');});}
+  if(scrim){scrim.addEventListener('click',closeNav);}
+  document.querySelectorAll('#nav a').forEach(function(a){a.addEventListener('click',closeNav);});
+
+  // Scrollspy
+  var links={}, navLinks=document.querySelectorAll('#nav a');
+  navLinks.forEach(function(a){links[a.getAttribute('href').slice(1)]=a;});
+  var spied=document.querySelectorAll('section[id], .part[id]');
+  var io=new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if(e.isIntersecting){
+        var id=e.target.id, link=links[id];
+        if(link){navLinks.forEach(function(l){l.classList.remove('active');}); link.classList.add('active');
+          link.scrollIntoView({block:'nearest'});}
+      }
+    });
+  },{rootMargin:'-15% 0px -75% 0px'});
+  spied.forEach(function(s){io.observe(s);});
+
+  // Level focus
+  var chips=document.querySelectorAll('.lvchip'), active=null;
+  var map={'f':'focus-f','p':'focus-p','a':'focus-a'};
+  chips.forEach(function(chip){
+    var lvl = chip.hasAttribute('data-f')?'f':chip.hasAttribute('data-p')?'p':'a';
+    chip.addEventListener('click',function(){
+      if(active===lvl){ // toggle off
+        body.classList.remove(map[lvl]); chip.classList.remove('on'); active=null; return;
+      }
+      Object.values(map).forEach(function(c){body.classList.remove(c);});
+      chips.forEach(function(c){c.classList.remove('on');});
+      body.classList.add(map[lvl]); chip.classList.add('on'); active=lvl;
+    });
+  });
+</script>
+</body>
+</html>
