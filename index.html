@@ -62,6 +62,13 @@
   .lede{font-size:1.08rem; color:#c3d0dd; max-width:60ch; margin:0 0 26px}
   .tags{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:6px}
   .tag{font-family:"IBM Plex Mono",monospace; font-size:.72rem; color:#bcccdb; border:1px solid #33465b; border-radius:20px; padding:4px 12px}
+  .mastbar{display:flex; flex-wrap:wrap; align-items:center; gap:16px; margin-top:22px; padding-top:20px; border-top:1px solid #2a3b4e}
+  .dl{display:inline-flex; align-items:center; gap:8px; background:var(--p); color:#14202E; border:0; font-family:"IBM Plex Sans",sans-serif; font-weight:600; font-size:.9rem; padding:9px 18px; border-radius:7px; transition:background .15s}
+  .dl::before{content:"↓"; font-family:"IBM Plex Mono",monospace}
+  .dl:hover{background:#c68f2b; color:#14202E}
+  .mastbar .credit{font-size:.85rem; color:#8ea1b5}
+  .mastbar .credit a{color:#e2b45f; border-bottom-color:rgba(226,180,95,.4)}
+  .mastbar .credit a:hover{color:#f0c876; border-bottom-color:#f0c876}
 
   /* ---------- Level legend ---------- */
   .legend{background:var(--surface); margin:0 -40px; padding:22px 40px; border-bottom:1px solid var(--line)}
@@ -235,6 +242,12 @@
           <span class="tag">Network devices</span>
           <span class="tag">On-prem</span>
           <span class="tag">Open-source only</span>
+        </div>
+        <div class="mastbar">
+          <a class="dl" href="network-assessment-roadmap.pdf" download>Download PDF</a>
+          <span class="credit">Created by
+            <a href="https://www.linkedin.com/in/emmanuel-bairaktaris/" target="_blank" rel="noopener">Emmanuel Bairaktaris</a>
+          </span>
         </div>
       </div>
     </header>
@@ -719,7 +732,7 @@ oscap xccdf eval --profile &lt;p&gt; &lt;content&gt;   <span class="c"># CIS/STI
           </ul>
         </section>
 
-        <p class="footer"><em>This is a living document. Keep the placeholder table and the ⚙-marked sections up to date as our environment, tooling and compliance requirements evolve.</em></p>
+        <p class="footer"><em>This is a living document. Keep the placeholder table and the ⚙-marked sections up to date as our environment, tooling and compliance requirements evolve.</em><br><br>Created by <a href="https://www.linkedin.com/in/emmanuel-bairaktaris/" target="_blank" rel="noopener">Emmanuel Bairaktaris</a> · <a href="network-assessment-roadmap.pdf" download>Download as PDF</a></p>
 
       </div>
     </div>
