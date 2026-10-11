@@ -1,0 +1,2315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Subnet Calculator & Cloud Network Planner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#E8EDF2; --panel:#FFFFFF; --panel2:#F4F7FA; --ink:#15202B; --muted:#596979; --line:#CDD6DF;
+  --accent:#0F6CBD; --accent-soft:#DCEBFA; --accent-ink:#FFFFFF;
+  --host:#9AACBD; --ok:#0B7A5A; --ok-soft:#DDF3EA; --warn:#9A5B00; --warn-soft:#FBEFD9;
+  --err:#B42E28; --err-soft:#FBE3E1; --code:#F1F4F7;
+  --sans:"IBM Plex Sans", -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --mono:"IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0E151C; --panel:#16202A; --panel2:#1B2733; --ink:#E3EAF1; --muted:#93A3B3; --line:#2B3A48;
+    --accent:#4FA6F2; --accent-soft:#16324D; --accent-ink:#06121E;
+    --host:#4C5F71; --ok:#3CC796; --ok-soft:#123326; --warn:#E8A33A; --warn-soft:#3A2A10;
+    --err:#F2766E; --err-soft:#3D1715; --code:#101820;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0E151C; --panel:#16202A; --panel2:#1B2733; --ink:#E3EAF1; --muted:#93A3B3; --line:#2B3A48;
+  --accent:#4FA6F2; --accent-soft:#16324D; --accent-ink:#06121E;
+  --host:#4C5F71; --ok:#3CC796; --ok-soft:#123326; --warn:#E8A33A; --warn-soft:#3A2A10;
+  --err:#F2766E; --err-soft:#3D1715; --code:#101820;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5}
+.wrap{max-width:1120px;margin:0 auto;padding:28px 20px 60px}
+header h1{font-size:clamp(1.5rem,3.2vw,2.1rem);font-weight:700;letter-spacing:-.02em;margin:0 0 4px}
+header p{margin:0;color:var(--muted);max-width:68ch}
+.tabs{display:flex;gap:4px;margin:22px 0 18px;border-bottom:2px solid var(--line);overflow-x:auto}
+.tab{appearance:none;border:0;background:none;color:var(--muted);font:600 15px var(--sans);padding:10px 16px;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;white-space:nowrap}
+.tab[aria-selected="true"]{color:var(--accent);border-bottom-color:var(--accent)}
+.tab:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.panel{display:none}.panel.active{display:block}
+section.box{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:20px;margin-bottom:16px}
+h2{font-size:1.15rem;margin:0 0 12px;font-weight:600}
+h3{font-size:1rem;margin:18px 0 8px;font-weight:600}
+label{display:block;font-size:13px;color:var(--muted);margin-bottom:4px;font-weight:500}
+input,select,textarea{font:15px var(--mono);color:var(--ink);background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:9px 10px;width:100%}
+select{font-family:var(--sans)}
+textarea{min-height:110px;resize:vertical}
+.row{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}
+.big-in{font-size:20px;padding:12px 14px}
+.hint{font-size:13px;color:var(--muted);margin-top:6px}
+.btn{appearance:none;border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink);font:600 14px var(--sans);padding:8px 14px;border-radius:6px;cursor:pointer}
+.btn.ghost{background:transparent;color:var(--accent)}
+.btn.small{padding:5px 10px;font-size:13px}
+.btn.danger{border-color:var(--line);background:transparent;color:var(--err)}
+.btns{display:flex;flex-wrap:wrap;gap:8px}
+.err{color:var(--err);background:var(--err-soft);padding:8px 12px;border-radius:6px;font-size:14px;margin-top:10px}
+.grid-out{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:8px;overflow:hidden;margin-top:16px}
+.cell{background:var(--panel);padding:10px 14px}
+.cell .k{font-size:12.5px;color:var(--muted)}
+.cell .v{font-family:var(--mono);font-size:15.5px;font-weight:500;word-break:break-all}
+.ruler{margin-top:18px;overflow-x:auto}
+.bits{display:flex;gap:10px;font-family:var(--mono);font-size:15px;white-space:nowrap}
+.oct{display:flex;gap:1px}
+.bit{width:17px;text-align:center;padding:4px 0;border-radius:3px}
+.bit.n{background:var(--accent);color:var(--accent-ink)}
+.bit.h{background:var(--panel2);color:var(--muted);border:1px solid var(--line)}
+.bitlabel{font-size:12.5px;color:var(--muted);margin:6px 0 2px}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--muted);margin-top:8px}
+.sw{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-2px;margin-right:5px}
+.tablewrap{overflow-x:auto;margin-top:10px;border:1px solid var(--line);border-radius:8px}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{padding:7px 12px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
+th{background:var(--panel2);font-weight:600;font-size:13px;color:var(--muted)}
+td.m{font-family:var(--mono)}
+tr:last-child td{border-bottom:0}
+.subrows .srow{display:grid;grid-template-columns:1.4fr 1.4fr 1fr 1fr auto;gap:8px;align-items:end;padding:10px 0;border-bottom:1px dashed var(--line)}
+.subrows .srow:last-child{border-bottom:0}
+@media (max-width:720px){.subrows .srow{grid-template-columns:1fr 1fr}.subrows .srow .rm{grid-column:span 2}}
+.stats{display:flex;flex-wrap:wrap;gap:24px;margin:4px 0 14px}
+.stat .n{font-family:var(--mono);font-size:1.3rem;font-weight:600}
+.stat .l{font-size:12.5px;color:var(--muted)}
+.map{position:relative;height:46px;background:repeating-linear-gradient(45deg,var(--panel2) 0 6px,var(--panel) 6px 12px);border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.seg{position:absolute;top:0;bottom:0;min-width:2px;border-right:1px solid var(--panel);display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:600;color:#fff;overflow:hidden;white-space:nowrap}
+.mapscale{display:flex;justify-content:space-between;font-family:var(--mono);font-size:12px;color:var(--muted);margin-top:4px}
+.tag{display:inline-block;font-size:12px;padding:1px 8px;border-radius:20px;margin:1px 4px 1px 0;white-space:nowrap}
+.tag.ok{background:var(--ok-soft);color:var(--ok)}
+.tag.warn{background:var(--warn-soft);color:var(--warn)}
+.tag.err{background:var(--err-soft);color:var(--err)}
+.tag.info{background:var(--accent-soft);color:var(--accent)}
+.msgs{list-style:none;padding:0;margin:10px 0 0}
+.msgs li{padding:7px 12px;border-radius:6px;margin-bottom:6px;font-size:14px}
+.msgs li.err{background:var(--err-soft);color:var(--err)}
+.msgs li.warn{background:var(--warn-soft);color:var(--warn)}
+pre{background:var(--code);border:1px solid var(--line);border-radius:8px;padding:14px;overflow-x:auto;font:13.5px/1.55 var(--mono);margin:8px 0 0;max-height:420px}
+.subtabs{display:flex;gap:6px;margin-top:6px}
+.subtabs button{appearance:none;border:1px solid var(--line);background:var(--panel2);color:var(--muted);font:600 13px var(--sans);padding:5px 12px;border-radius:20px;cursor:pointer}
+.subtabs button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.free{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.free span{font-family:var(--mono);font-size:13px;background:var(--panel2);border:1px solid var(--line);padding:3px 9px;border-radius:5px}
+.note{font-size:13.5px;color:var(--muted);max-width:75ch}
+.theme-toggle{float:right}
+.homelink{display:inline-block;font-size:14px;color:var(--accent);text-decoration:none;margin-bottom:10px}
+.homelink:hover{text-decoration:underline}
+.site-foot{margin-top:28px;font-size:13.5px;color:var(--muted)}
+.site-foot a{color:var(--accent)}
+.explain-txt{display:none;font-size:13.5px;color:var(--muted);line-height:1.5;margin-top:4px;font-family:var(--sans);font-weight:400;word-break:normal}
+body.beginner .explain-txt{display:block}
+tr.explain-row{display:none}
+body.beginner tr.explain-row{display:table-row}
+tr.explain-row td{white-space:normal;font-size:13.5px;color:var(--muted);background:var(--panel2);padding:8px 14px 12px 40px;line-height:1.55;max-width:900px}
+details.explain{display:none;background:var(--accent-soft);border-radius:8px;padding:12px 16px;margin:0 0 16px}
+body.beginner details.explain{display:block}
+details.explain summary{cursor:pointer;font-weight:600;color:var(--accent)}
+details.explain p,details.explain li{max-width:80ch;font-size:14.5px}
+details.explain li{margin-bottom:6px}
+details.explain ul{padding-left:20px;margin-bottom:4px}
+details.explain code,.explain-txt code{font-family:var(--mono);font-size:13px;background:var(--panel);padding:1px 5px;border-radius:4px}
+label.beginner-toggle{display:inline-flex;align-items:center;gap:8px;font-size:14px;color:var(--ink);margin-top:14px;cursor:pointer}
+label.beginner-toggle input{width:18px;height:18px;margin:0}
+.bit.p{background:var(--accent-soft);color:var(--accent);border:1px dashed var(--accent)}
+.tool-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+#gc-rows .srow{grid-template-columns:1.2fr 1fr 1.4fr 1fr .8fr auto}
+#rl-rows .srow{grid-template-columns:1.1fr 1.1fr .8fr .8fr 1.3fr 1.3fr .8fr auto}
+#org-rows .srow{grid-template-columns:1.6fr 1.1fr 1fr 1fr auto}
+@media (max-width:720px){.tool-grid{grid-template-columns:1fr}#gc-rows .srow,#rl-rows .srow,#org-rows .srow{grid-template-columns:1fr 1fr}}
+.rl-notes{grid-column:1/-1}
+.sumgroup{margin-bottom:10px}
+.sumgroup b{display:inline-block;min-width:150px;font-size:14px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <button class="btn ghost small theme-toggle" id="themeBtn" type="button">Toggle theme</button>
+    <a class="homelink" href="./">← All projects</a>
+    <h1>Subnet Calculator &amp; Cloud Network Planner</h1>
+    <p>Work out IPv4 and IPv6 networks, plan your whole address space, lay out Azure, AWS and Google Cloud networks with each cloud's rules built in, and generate firewall rules and deployment code.</p>
+    <label class="beginner-toggle"><input type="checkbox" id="beginnerBox"> Explain everything in plain language</label>
+  </header>
+
+  <nav class="tabs" role="tablist">
+    <button class="tab" role="tab" aria-selected="true" data-tab="calc">IPv4</button>
+    <button class="tab" role="tab" aria-selected="false" data-tab="v6">IPv6</button>
+    <button class="tab" role="tab" aria-selected="false" data-tab="tools">Tools</button>
+    <button class="tab" role="tab" aria-selected="false" data-tab="org">Address plan</button>
+    <button class="tab" role="tab" aria-selected="false" data-tab="azure">Azure</button>
+    <button class="tab" role="tab" aria-selected="false" data-tab="aws">AWS</button>
+    <button class="tab" role="tab" aria-selected="false" data-tab="gcp">Google Cloud</button>
+    <button class="tab" role="tab" aria-selected="false" data-tab="rules">Security rules</button>
+    <button class="tab" role="tab" aria-selected="false" data-tab="cheat">Cheat sheet</button>
+    <button class="tab" role="tab" aria-selected="false" data-tab="save">Save / load</button>
+  </nav>
+
+  <!-- ============ CALCULATOR ============ -->
+  <div class="panel active" id="panel-calc">
+    <details class="explain" open><summary>New to IP addressing? Start here</summary>
+      <p>Every device on a network has an <b>IP address</b>: four numbers from 0 to 255 separated by dots, like 192.168.10.57. Behind the scenes it is 32 ones and zeros (bits), 8 for each number.</p>
+      <p>A <b>subnet</b> is a block of consecutive addresses that belong together, like a street where every house shares the street name. The <b>prefix</b> after the slash (the 26 in /26) says how many of the 32 bits are the street name, called the <b>network part</b>. The bits left over number the houses, called the <b>host part</b>.</p>
+      <p>Fewer network bits means more host bits, which means a bigger subnet. Every bit given to hosts doubles the size: /24 is 256 addresses, /25 is 128, /26 is 64. That is why subnet sizes are always powers of two.</p>
+      <p>A <b>subnet mask</b> such as 255.255.255.192 is the same information as the prefix, written like an address: ones over the network bits, zeros over the host bits.</p>
+      <p>Try changing the number after the slash below and watch the results and the bit ruler change. Each result has a short explanation under it.</p>
+    </details>
+    <section class="box">
+      <label for="calc-in">IP address with prefix or mask</label>
+      <input id="calc-in" class="big-in" value="192.168.10.57/26" autocomplete="off" spellcheck="false">
+      <div class="hint">Accepts 10.1.2.3/24, 10.1.2.3 255.255.255.0, or 10.1.2.3/255.255.255.0</div>
+      <div id="calc-err"></div>
+      <div id="calc-out"></div>
+      <div class="ruler" id="calc-ruler"></div>
+    </section>
+
+    <section class="box">
+      <h2>Split into smaller subnets</h2>
+      <details class="explain"><summary>Why split a network?</summary>
+        <p>You often get one big block and divide it so different groups (servers, staff laptops, Wi-Fi guests, printers) live in separate subnets. That keeps traffic organised and lets you apply different security rules to each group. Choose a longer prefix to cut the block into equal pieces. In each piece the first address is the network address and the last is the broadcast address, so neither can go to a device.</p>
+      </details>
+      <div class="row">
+        <div><label for="split-prefix">New prefix length</label><select id="split-prefix"></select></div>
+        <div><label>Result</label><div id="split-sum" style="padding-top:8px"></div></div>
+      </div>
+      <div class="explain-txt" id="split-explain"></div>
+      <div class="tablewrap"><table id="split-table"></table></div>
+      <div class="hint" id="split-more"></div>
+    </section>
+  </div>
+
+  <!-- ============ AZURE ============ -->
+  <div class="panel" id="panel-azure">
+    <details class="explain" open><summary>How Azure networking works, in plain terms</summary>
+      <p>A <b>virtual network (VNet)</b> is your own private network inside Azure. You give it an <b>address space</b>, a big block such as 10.1.0.0/20 (4,096 addresses), and everything you put in the VNet gets an address from that pool.</p>
+      <p>You then cut the address space into <b>subnets</b>. Virtual machines and services always live in a subnet, and you attach security rules (network security groups) and routing per subnet. Some Azure services insist on a subnet of their own with an exact name and a minimum size; the planner knows those rules and warns you when they are broken.</p>
+      <p><b>Azure keeps 5 addresses in every subnet</b>: the first (network address), the second (the default gateway, which is the subnet's router), the third and fourth (Azure DNS) and the last (broadcast). A /24 therefore has 256 addresses but only 251 you can use.</p>
+      <p><b>Plan for growth.</b> A subnet that has resources in it is hard to resize, and VNets you want to connect (peer) must not overlap. Use private ranges (10.x.x.x, 172.16 to 172.31.x.x, 192.168.x.x), leave free space, and give every VNet its own separate block.</p>
+      <p><b>Hub and spoke</b> is the most common layout. One hub VNet holds shared services: the gateway to your offices, the firewall and Bastion. Each application gets its own spoke VNet, peered to the hub. The example buttons below load one of each.</p>
+    </details>
+    <section class="box">
+      <h2>Virtual network</h2>
+      <div class="explain-txt" style="margin:-4px 0 12px">The <b>name</b>, <b>resource group</b> (a folder that holds related Azure resources) and <b>region</b> (the Azure location, such as westeurope) are only used in the deployment code at the bottom. The <b>address space</b> is what matters for planning: the total pool of addresses that every subnet is carved from.</div>
+      <div class="row">
+        <div><label for="az-name">VNet name</label><input id="az-name"></div>
+        <div><label for="az-space">Address space</label><input id="az-space" spellcheck="false"></div>
+        <div><label for="az-rg">Resource group</label><input id="az-rg"></div>
+        <div><label for="az-loc">Region</label><input id="az-loc"></div>
+      </div>
+      <div class="btns" style="margin-top:14px">
+        <button class="btn ghost small" type="button" id="preset-hub">Load hub example</button>
+        <button class="btn ghost small" type="button" id="preset-spoke">Load spoke example</button>
+        <button class="btn ghost small" type="button" id="preset-clear">Start empty</button>
+      </div>
+    </section>
+
+    <section class="box">
+      <h2>Subnets</h2>
+      <p class="note" style="margin-top:0">Size each subnet by the number of hosts you need, a prefix length, or an exact CIDR. Azure keeps 5 addresses in every subnet, so host counts are padded automatically. Subnets sized by hosts or prefix are placed largest first so nothing is wasted on alignment.</p>
+      <details class="explain"><summary>What the subnet options mean</summary><ul>
+        <li><b>Name</b> is your label. Special Azure subnets need an exact name, so it is filled in and locked for those.</li>
+        <li><b>Purpose</b> is what will live in the subnet. Picking a special purpose applies its Azure rules: required name, minimum size and recommended size. A description appears under each row.</li>
+        <li><b>Hosts needed</b>: tell it how many devices or IPs you need. The planner adds Azure's 5 reserved addresses and rounds up to the next allowed size.</li>
+        <li><b>Prefix length</b>: choose the size directly. /24 = 256 addresses, /25 = 128, /26 = 64, /27 = 32, /28 = 16, /29 = 8, which is Azure's smallest.</li>
+        <li><b>Exact CIDR</b>: pin the subnet to a specific range, for example to match a network that already exists. It must start on a boundary matching its size (a /26 can start at .0, .64, .128 or .192).</li>
+      </ul></details>
+      <div class="subrows" id="az-rows"></div>
+      <div class="btns" style="margin-top:12px"><button class="btn small" type="button" id="az-add">Add subnet</button></div>
+    </section>
+
+    <section class="box">
+      <h2>Plan</h2>
+      <details class="explain"><summary>How to read the plan</summary><ul>
+        <li><b>Allocated</b> is the total size of all subnets. <b>Usable by resources</b> subtracts Azure's 5 reserved addresses per subnet. <b>Unallocated</b> is what is still free for future subnets.</li>
+        <li>The <b>bar</b> is the whole address space from first to last address. Each coloured block is a subnet at its real position and to scale; striped areas are free.</li>
+        <li><b>Usable range</b> is the addresses Azure can hand out to your VMs and services. <b>Azure reserved</b> shows the 5 held-back addresses; hover to see what each one does.</li>
+        <li>A subnet must start on a multiple of its own size. Placing the largest subnets first avoids leaving unusable gaps, which is why the order can differ from your list.</li>
+        <li><b>Unallocated space</b> lists the free gaps as the biggest clean blocks you could still create.</li>
+        <li>Red notes are problems that would make Azure reject the deployment. Amber notes are recommendations. The grey text under each subnet explains how it was sized and placed.</li>
+      </ul></details>
+      <div class="stats" id="az-stats"></div>
+      <div class="map" id="az-map"></div>
+      <div class="mapscale" id="az-scale"></div>
+      <ul class="msgs" id="az-msgs"></ul>
+      <div class="tablewrap"><table id="az-table"></table></div>
+      <h3>Unallocated space</h3>
+      <div class="free" id="az-free"></div>
+    </section>
+
+    <section class="box">
+      <h2>Deploy it</h2>
+      <div class="explain-txt" style="margin:-4px 0 10px">These scripts create exactly the network planned above. Pick the tool you use; the text under the code explains how to run it.</div>
+      <div class="subtabs" id="code-tabs">
+        <button type="button" data-code="cli" aria-pressed="true">Azure CLI</button>
+        <button type="button" data-code="bicep" aria-pressed="false">Bicep</button>
+        <button type="button" data-code="ps" aria-pressed="false">PowerShell</button>
+        <button type="button" data-code="csv" aria-pressed="false">CSV</button>
+      </div>
+      <pre id="az-code"></pre>
+      <div class="explain-txt" id="code-explain" style="margin-top:8px"></div>
+      <div class="btns" style="margin-top:10px"><button class="btn small" type="button" id="copy-code">Copy</button><span class="hint" id="copy-msg" style="margin:6px 0 0"></span></div>
+    </section>
+
+    <section class="box">
+      <h2>Peering overlap check</h2>
+      <p class="note" style="margin-top:0">Peered VNets, VPN sites and on-premises ranges must not overlap. Put one range per line, optionally with a name in front.</p>
+      <details class="explain"><summary>Why overlaps matter</summary>
+        <p>Connected networks send traffic based on the destination address. If two networks both contain 10.1.8.5, a router cannot tell which one you mean. Azure refuses to peer VNets whose address spaces overlap, and VPN connections to an overlapping office network break routing. Check every VNet and office network you might ever connect before choosing ranges; renumbering later is painful.</p>
+      </details>
+      <textarea id="ov-in" spellcheck="false"></textarea>
+      <div class="btns" style="margin-top:10px"><button class="btn ghost small" type="button" id="ov-add">Add this VNet's space</button></div>
+      <div id="ov-out" style="margin-top:12px"></div>
+    </section>
+  </div>
+
+  <!-- ============ AWS ============ -->
+  <div class="panel" id="panel-aws">
+    <details class="explain" open><summary>How AWS networking works, and how it differs from Azure</summary>
+      <p>The subnet math is exactly the same in every cloud: same prefixes, same powers of two, same alignment rules. What changes is each cloud's own rules on top.</p>
+      <ul>
+        <li><b>A VPC is AWS's VNet.</b> A VPC (Virtual Private Cloud) is your private network in AWS. Its address range is called a CIDR block.</li>
+        <li><b>Both clouds keep 5 addresses per subnet, but different ones.</b> AWS keeps the first four (network address, VPC router, Amazon DNS, and one held for future use) plus the last. Azure keeps the first four (network, gateway, two for DNS) plus the last. Same count, so a /24 has 251 usable addresses in both.</li>
+        <li><b>Size limits differ.</b> An AWS VPC block must be between /16 and /28; for more than 65,536 addresses you add secondary blocks later. The smallest AWS subnet is a /28 (16 addresses, 11 usable), while Azure allows a /29.</li>
+        <li><b>Availability Zones are the biggest difference.</b> An AWS subnet lives in exactly one Availability Zone, a separate datacenter within the region. To survive a datacenter failure you create each tier once per zone, so a 3-tier app across 3 zones needs 9 subnets. An Azure subnet automatically covers every zone in its region, so one per tier is enough. This planner repeats each tier across the zones you choose.</li>
+        <li><b>Public or private is a routing choice.</b> An AWS subnet is public when its route table sends internet traffic (0.0.0.0/0) to an Internet Gateway. Private subnets reach the internet through a NAT gateway placed in a public subnet. Azure has no public/private subnet split like this.</li>
+        <li><b>No special subnet names.</b> AWS does not demand exact names like Azure's GatewaySubnet, but some services still want small dedicated subnets in each zone, such as Transit Gateway and Network Firewall.</li>
+      </ul>
+    </details>
+
+    <section class="box">
+      <h2>VPC</h2>
+      <div class="explain-txt" style="margin:-4px 0 12px">The <b>CIDR block</b> is the pool every subnet is carved from. The <b>region</b> code (such as eu-west-1 or us-east-1) is used to name the zones: eu-west-1a, eu-west-1b and so on. <b>Availability Zones</b> is how many separate datacenters each tier is spread across; 2 or 3 is typical for production.</div>
+      <div class="row">
+        <div><label for="aws-name">VPC name</label><input id="aws-name"></div>
+        <div><label for="aws-cidr">CIDR block</label><input id="aws-cidr" spellcheck="false"></div>
+        <div><label for="aws-region">Region</label><input id="aws-region" spellcheck="false"></div>
+        <div><label for="aws-azs">Availability Zones</label><select id="aws-azs"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option></select></div>
+      </div>
+      <div class="btns" style="margin-top:14px">
+        <button class="btn ghost small" type="button" id="aws-preset-3tier">Load 3-tier web app example</button>
+        <button class="btn ghost small" type="button" id="aws-preset-eks">Load Kubernetes (EKS) example</button>
+        <button class="btn ghost small" type="button" id="aws-preset-clear">Start empty</button>
+      </div>
+    </section>
+
+    <section class="box">
+      <h2>Subnet tiers</h2>
+      <p class="note" style="margin-top:0">A tier is one role in your network, such as public or app. Each tier becomes one subnet per Availability Zone, all the same size. AWS keeps 5 addresses in every subnet, so host counts are padded automatically, and larger subnets are placed first so nothing is wasted.</p>
+      <details class="explain"><summary>What the tier options mean</summary><ul>
+        <li><b>Tier name</b> is your label. Each subnet is named after it plus its zone, like app-eu-west-1a.</li>
+        <li><b>Purpose</b> applies AWS's guidance for that kind of tier. Public purposes get internet access in the generated code.</li>
+        <li><b>Hosts needed</b> is per zone: for 300 app servers spread over 3 zones, enter 100.</li>
+        <li><b>Prefix length</b> sets each zone's subnet size directly. /24 = 256 addresses, /26 = 64, /28 = 16, which is AWS's smallest.</li>
+      </ul></details>
+      <div class="subrows" id="aws-rows"></div>
+      <div class="btns" style="margin-top:12px"><button class="btn small" type="button" id="aws-add">Add tier</button></div>
+    </section>
+
+    <section class="box">
+      <h2>Plan</h2>
+      <details class="explain"><summary>How to read the plan</summary><ul>
+        <li><b>Allocated</b> is the total size of all subnets in all zones. <b>Usable by resources</b> subtracts AWS's 5 reserved addresses per subnet. <b>Unallocated</b> is still free for later, such as adding another zone.</li>
+        <li>The <b>bar</b> is the whole VPC range. Each tier has its own colour, so you can see its copies in each zone; striped areas are free.</li>
+        <li>Each subnet must start on a multiple of its own size, so the largest are placed first to avoid gaps.</li>
+        <li>Red notes would make AWS reject the setup or break the service; amber notes are recommendations. The grey text under each subnet explains its size, zone and reserved addresses.</li>
+      </ul></details>
+      <div class="stats" id="aws-stats"></div>
+      <div class="map" id="aws-map"></div>
+      <div class="mapscale" id="aws-scale"></div>
+      <ul class="msgs" id="aws-msgs"></ul>
+      <div class="tablewrap"><table id="aws-table"></table></div>
+      <h3>Unallocated space</h3>
+      <div class="free" id="aws-free"></div>
+    </section>
+
+    <section class="box">
+      <h2>Deploy it</h2>
+      <div class="explain-txt" style="margin:-4px 0 10px">These scripts create exactly the VPC planned above. Public subnets also get an Internet Gateway and a route to it. Private subnets get no internet access until you add a NAT gateway, which is left out because it is billed by the hour.</div>
+      <div class="subtabs" id="aws-code-tabs">
+        <button type="button" data-code="cli" aria-pressed="true">AWS CLI</button>
+        <button type="button" data-code="tf" aria-pressed="false">Terraform</button>
+        <button type="button" data-code="cfn" aria-pressed="false">CloudFormation</button>
+        <button type="button" data-code="csv" aria-pressed="false">CSV</button>
+      </div>
+      <pre id="aws-code"></pre>
+      <div class="explain-txt" id="aws-code-explain" style="margin-top:8px"></div>
+      <div class="btns" style="margin-top:10px"><button class="btn small" type="button" id="aws-copy">Copy</button><span class="hint" id="aws-copy-msg" style="margin:6px 0 0"></span></div>
+    </section>
+  </div>
+
+  <!-- ============ IPv6 ============ -->
+  <div class="panel" id="panel-v6">
+    <details class="explain" open><summary>How IPv6 differs from IPv4</summary>
+      <p>IPv6 addresses are 128 bits long instead of 32. They are written as eight groups of four hexadecimal digits (0–9 and a–f) separated by colons, such as 2001:0db8:0000:0012:0000:0000:0000:0001.</p>
+      <p>Two shortcuts make them shorter. Leading zeros in a group can be dropped (0db8 becomes db8), and one run of all-zero groups can be replaced by a double colon. So the address above is normally written 2001:db8:0:12::1. The double colon may appear only once, otherwise nobody could tell how many zeros each one stands for.</p>
+      <p>The prefix works exactly like IPv4: /64 means the first 64 bits are the network. The difference is scale. One /64 holds about 18 quintillion addresses, so IPv6 subnets are never sized by host count. Almost every subnet is a /64, because devices create their own address automatically (called SLAAC), and that needs 64 host bits.</p>
+      <p>IPv6 has no broadcast address (multicast does that job) and rarely uses NAT, because there are enough addresses for every device to have its own. Firewalls, not NAT, keep devices private.</p>
+      <p>In the cloud, Azure and Google Cloud subnets use /64s, and AWS gives each VPC a /56 (room for 256 /64 subnets) by default.</p>
+    </details>
+    <section class="box">
+      <label for="v6-in">IPv6 address with prefix</label>
+      <input id="v6-in" class="big-in" value="2001:db8:abcd:12::1/64" autocomplete="off" spellcheck="false">
+      <div class="hint">Accepts full or shortened forms, like 2001:db8::1/48 or fd00:0:0:1::/64</div>
+      <div id="v6-err"></div>
+      <div id="v6-out"></div>
+      <div class="ruler" id="v6-ruler"></div>
+    </section>
+    <section class="box">
+      <h2>Split into smaller prefixes</h2>
+      <details class="explain"><summary>How IPv6 space is usually divided</summary>
+        <p>A typical organisation gets a /48 from its provider or region. That alone holds 65,536 /64 subnets, more than most companies will ever need. A common pattern is to split on 4-bit boundaries, one hex digit at a time: /48 for the organisation, /52 per site, /56 per building or VPC, /64 per subnet. Each step then changes exactly one hex digit, which keeps addresses easy to read.</p>
+      </details>
+      <div class="row">
+        <div><label for="v6-split">New prefix length</label><select id="v6-split"></select></div>
+        <div><label>Result</label><div id="v6-split-sum" style="padding-top:8px"></div></div>
+      </div>
+      <div class="explain-txt" id="v6-split-explain"></div>
+      <div class="tablewrap"><table id="v6-split-table"></table></div>
+      <div class="hint" id="v6-split-more"></div>
+    </section>
+  </div>
+
+  <!-- ============ TOOLS ============ -->
+  <div class="panel" id="panel-tools">
+    <section class="box">
+      <h2>Summarise routes</h2>
+      <details class="explain" open><summary>What route summarisation is</summary>
+        <p>Summarising means describing many networks with fewer, bigger blocks. A VPN or firewall that lists 10.1.0.0/24, 10.1.1.0/24, 10.1.2.0/24 and 10.1.3.0/24 can list 10.1.0.0/22 instead, because those four blocks sit side by side and together fill exactly that /22. Fewer routes means simpler configuration, smaller routing tables and fewer mistakes. It only works cleanly when blocks are next to each other and aligned, which is why a careful address plan pays off.</p>
+      </details>
+      <label for="sum-in">Ranges to summarise, one per line (IPv4 or IPv6)</label>
+      <textarea id="sum-in" spellcheck="false"></textarea>
+      <div id="sum-out" style="margin-top:12px"></div>
+    </section>
+    <section class="box">
+      <h2>Which range is this address in?</h2>
+      <details class="explain"><summary>How routers decide when ranges overlap</summary>
+        <p>An address can sit inside several ranges at once: 10.1.2.37 is inside the VNet 10.1.0.0/20 and also inside the subnet 10.1.2.0/25. Routers and firewalls then use <b>longest prefix match</b>: the most specific range, the one with the biggest number after the slash, wins. That is how a cloud can send a whole network one way and a single subnet inside it another way.</p>
+      </details>
+      <div class="tool-grid">
+        <div><label for="ir-ips">Addresses to check, one per line</label><textarea id="ir-ips" spellcheck="false"></textarea></div>
+        <div><label for="ir-ranges">Ranges, one per line, optionally with a name in front</label><textarea id="ir-ranges" spellcheck="false"></textarea>
+          <div class="btns" style="margin-top:8px"><button class="btn ghost small" type="button" id="ir-fill">Add the ranges from my plans</button></div></div>
+      </div>
+      <div id="ir-msgs"></div>
+      <div class="tablewrap"><table id="ir-table"></table></div>
+    </section>
+  </div>
+
+  <!-- ============ ADDRESS PLAN ============ -->
+  <div class="panel" id="panel-org">
+    <details class="explain" open><summary>Why plan your whole address space first</summary>
+      <p>Every network you might ever connect, whether offices, Azure VNets, AWS VPCs or Google Cloud, needs addresses that do not overlap. Otherwise they cannot be joined later without painful renumbering. An address plan hands out big, non-overlapping blocks up front, one per cloud, region and environment, and each team then carves its own subnets from its block.</p>
+      <p>Good plans keep related networks together in one aligned block, so each group can be reached with a single route, and leave plenty of space free for growth. 10.0.0.0/8 holds 16.7 million addresses; giving each environment a /16 (65,536) is common and still leaves room for 256 of them.</p>
+      <p>Enter what already exists as exact ranges so the plan works around them, then add blocks for everything new. When a cloud block is ready, open it straight in the matching cloud planner.</p>
+    </details>
+    <section class="box">
+      <h2>Address space</h2>
+      <div class="row"><div><label for="org-space">The overall range you are dividing</label><input id="org-space" spellcheck="false"></div></div>
+      <div class="explain-txt">Usually one of the private ranges: 10.0.0.0/8 (16.7 million addresses), 172.16.0.0/12 (1 million) or 192.168.0.0/16 (65,536). Larger organisations normally use 10.0.0.0/8.</div>
+      <div class="btns" style="margin-top:14px">
+        <button class="btn ghost small" type="button" id="org-preset">Load example plan</button>
+        <button class="btn ghost small" type="button" id="org-clear">Start empty</button>
+      </div>
+    </section>
+    <section class="box">
+      <h2>Blocks</h2>
+      <details class="explain"><summary>What the options mean</summary><ul>
+        <li><b>Category</b> groups blocks so the plan can show one summary route per cloud or site, and lets you open cloud blocks in their planner.</li>
+        <li><b>Prefix length</b> sets the size directly: /16 = 65,536 addresses, /18 = 16,384, /20 = 4,096, /22 = 1,024.</li>
+        <li><b>Addresses needed</b> rounds up to the next power of two. Each cloud's reserved addresses are handled later, inside its planner.</li>
+        <li><b>Existing range</b> pins a block that is already in use, such as your office network, so nothing new collides with it.</li>
+      </ul></details>
+      <div class="subrows" id="org-rows"></div>
+      <div class="btns" style="margin-top:12px"><button class="btn small" type="button" id="org-add">Add block</button></div>
+    </section>
+    <section class="box">
+      <h2>Plan</h2>
+      <div class="stats" id="org-stats"></div>
+      <div class="map" id="org-map"></div>
+      <div class="mapscale" id="org-scale"></div>
+      <ul class="msgs" id="org-msgs"></ul>
+      <div class="tablewrap"><table id="org-table"></table></div>
+      <h3>Summary routes per group</h3>
+      <div class="explain-txt" style="margin-bottom:6px">The fewest routes that cover each group. A VPN or firewall in your office only needs these to reach a whole cloud, which is the payoff of keeping each group's blocks together and aligned.</div>
+      <div id="org-sum"></div>
+      <h3>Unallocated space</h3>
+      <div class="free" id="org-free"></div>
+    </section>
+  </div>
+
+  <!-- ============ GOOGLE CLOUD ============ -->
+  <div class="panel" id="panel-gcp">
+    <details class="explain" open><summary>How Google Cloud networking works, and how it differs</summary><ul>
+      <li><b>The VPC is global.</b> One Google Cloud VPC network spans every region and has no address space of its own. Each subnet has its own range and lives in one region. Azure VNets and AWS VPCs, by contrast, sit in a single region and have an overall address space.</li>
+      <li><b>Subnets are regional</b>, as in Azure and unlike AWS: one subnet covers every zone in its region, so you do not repeat it per zone.</li>
+      <li><b>Google keeps 4 addresses per subnet, not 5</b>: the first (network), the second (default gateway), the second-to-last (reserved for future use) and the last (broadcast). The smallest subnet is a /29 (8 addresses, 4 usable).</li>
+      <li><b>Secondary ranges.</b> A subnet can carry extra ranges, mainly for Kubernetes (GKE) pods and services. They come from your address plan too and must not overlap anything.</li>
+      <li><b>Special ranges</b> exist for regional load balancers (proxy-only subnets), Serverless VPC Access connectors (exactly /28) and private services access for managed services like Cloud SQL.</li>
+      <li>The <b>planning block</b> below is not a Google Cloud setting. It is the range you set aside for this VPC in your address plan, so subnets in every region stay inside it and never clash with your other networks.</li>
+    </ul></details>
+    <section class="box">
+      <h2>VPC network</h2>
+      <div class="explain-txt" style="margin:-4px 0 12px">The <b>name</b> and <b>project ID</b> (the Google Cloud project that owns the network) are only used in the deployment code. The <b>planning block</b> is the pool all subnets are carved from.</div>
+      <div class="row">
+        <div><label for="gc-name">VPC name</label><input id="gc-name" spellcheck="false"></div>
+        <div><label for="gc-space">Planning block</label><input id="gc-space" spellcheck="false"></div>
+        <div><label for="gc-project">Project ID</label><input id="gc-project" spellcheck="false"></div>
+      </div>
+      <div class="btns" style="margin-top:14px">
+        <button class="btn ghost small" type="button" id="gc-preset">Load example</button>
+        <button class="btn ghost small" type="button" id="gc-clear">Start empty</button>
+      </div>
+    </section>
+    <section class="box">
+      <h2>Subnets</h2>
+      <p class="note" style="margin-top:0">Each subnet gets a region and a purpose. Google keeps 4 addresses in each subnet, so host counts are padded automatically, and larger ranges are placed first so nothing is wasted.</p>
+      <details class="explain"><summary>What the subnet options mean</summary><ul>
+        <li><b>Name</b> must use lowercase letters, digits and hyphens, and start with a letter (a Google Cloud rule).</li>
+        <li><b>Region</b> is where the subnet lives, such as europe-west1 or us-central1. Private services access ranges are global.</li>
+        <li><b>Purpose</b> applies Google's rules for special subnets. GKE creates three ranges from one row.</li>
+        <li><b>Hosts needed</b>, <b>Prefix length</b> and <b>Exact CIDR</b> work as in the other planners; for GKE you enter the maximum number of nodes instead.</li>
+      </ul></details>
+      <div class="subrows" id="gc-rows"></div>
+      <div class="btns" style="margin-top:12px"><button class="btn small" type="button" id="gc-add">Add subnet</button></div>
+    </section>
+    <section class="box">
+      <h2>Plan</h2>
+      <details class="explain"><summary>How to read the plan</summary><ul>
+        <li>Each row is one address range. A GKE cluster shows three rows: nodes (primary), pods and services (secondary).</li>
+        <li><b>Usable range</b> skips Google's reserved addresses on primary ranges. Secondary and allocated ranges are handed to GKE or Google services whole.</li>
+        <li>The <b>bar</b> shows the planning block to scale; each subnet's ranges share its colour. Red notes would make Google reject the setup; amber notes are recommendations.</li>
+      </ul></details>
+      <div class="stats" id="gc-stats"></div>
+      <div class="map" id="gc-map"></div>
+      <div class="mapscale" id="gc-scale"></div>
+      <ul class="msgs" id="gc-msgs"></ul>
+      <div class="tablewrap"><table id="gc-table"></table></div>
+      <h3>Unallocated space</h3>
+      <div class="free" id="gc-free"></div>
+    </section>
+    <section class="box">
+      <h2>Deploy it</h2>
+      <div class="subtabs" id="gc-code-tabs">
+        <button type="button" data-code="gcloud" aria-pressed="true">gcloud CLI</button>
+        <button type="button" data-code="tf" aria-pressed="false">Terraform</button>
+        <button type="button" data-code="csv" aria-pressed="false">CSV</button>
+      </div>
+      <pre id="gc-code"></pre>
+      <div class="explain-txt" id="gc-code-explain" style="margin-top:8px"></div>
+      <div class="btns" style="margin-top:10px"><button class="btn small" type="button" data-copy="gc-code">Copy</button><span class="hint" data-copy-msg="gc-code" style="margin:6px 0 0"></span></div>
+    </section>
+  </div>
+
+  <!-- ============ SECURITY RULES ============ -->
+  <div class="panel" id="panel-rules">
+    <details class="explain" open><summary>How cloud firewall rules work</summary>
+      <p>Firewall rules decide which traffic may reach your resources. Each rule matches a <b>source</b> (where traffic comes from), a <b>destination</b> (where it is going), a <b>protocol</b> (TCP, UDP or ICMP) and a <b>port</b> (which service, such as 443 for HTTPS), and then allows or blocks it.</p>
+      <p>All three clouds use <b>stateful</b> rules: once a connection is allowed in, its replies are allowed back out automatically, so you only describe who may start a connection.</p>
+      <p>Good practice is <b>least privilege</b>: allow only the sources and ports that really need it, and never open management ports such as SSH (22) or Remote Desktop (3389) to the whole internet.</p>
+      <p>The clouds differ in the details. Azure network security groups (NSGs) use numbered priorities and support allow and deny. AWS security groups can only allow, so blocking needs a network ACL. Google Cloud firewall rules apply to the whole VPC and use priorities like Azure.</p>
+    </details>
+    <section class="box">
+      <h2>Target</h2>
+      <div class="row">
+        <div><label for="rl-cloud">Cloud</label><select id="rl-cloud"><option value="azure">Azure network security group</option><option value="aws">AWS security group</option><option value="gcp">Google Cloud firewall</option></select></div>
+        <div data-cloud="azure"><label for="rl-rg">Resource group</label><input id="rl-rg" spellcheck="false"></div>
+        <div data-cloud="azure"><label for="rl-nsg">NSG name</label><input id="rl-nsg" spellcheck="false"></div>
+        <div data-cloud="aws"><label for="rl-sg">Security group ID</label><input id="rl-sg" spellcheck="false"></div>
+        <div data-cloud="aws"><label for="rl-nacl">Network ACL ID (for block rules)</label><input id="rl-nacl" spellcheck="false"></div>
+        <div data-cloud="gcp"><label for="rl-network">VPC network name</label><input id="rl-network" spellcheck="false"></div>
+      </div>
+      <div class="explain-txt" id="rl-cloud-exp" style="margin-top:10px"></div>
+    </section>
+    <section class="box">
+      <h2>Rules</h2>
+      <p class="note" style="margin-top:0">Rules are checked from the top. For source and destination, type a CIDR or IP, <b>Internet</b>, or <b>Any</b>, or pick a range from your plans.</p>
+      <details class="explain"><summary>What the rule fields mean</summary><ul>
+        <li><b>Service</b> fills in the usual protocol and port for common services. Choose Custom to set them yourself.</li>
+        <li><b>Protocol</b>: TCP carries most traffic (web, databases, SSH); UDP is used by DNS and some streaming; ICMP is ping.</li>
+        <li><b>Ports</b>: a single port (443), a list (80,443) or a range (8000-8100). Leave empty for all ports.</li>
+        <li><b>Source</b> is who starts the connection; <b>destination</b> is what they connect to. <b>Internet</b> means any public address; <b>Any</b> means any address at all, including your own networks.</li>
+        <li><b>Action</b> allows or blocks the traffic.</li>
+      </ul></details>
+      <datalist id="rl-known"></datalist>
+      <div class="subrows" id="rl-rows"></div>
+      <div class="btns" style="margin-top:12px">
+        <button class="btn small" type="button" id="rl-add">Add rule</button>
+        <button class="btn ghost small" type="button" id="rl-preset">Load example rules</button>
+      </div>
+    </section>
+    <section class="box">
+      <h2>Generated rules</h2>
+      <pre id="rl-code"></pre>
+      <div class="explain-txt" id="rl-code-explain" style="margin-top:8px"></div>
+      <div class="btns" style="margin-top:10px"><button class="btn small" type="button" data-copy="rl-code">Copy</button><span class="hint" data-copy-msg="rl-code" style="margin:6px 0 0"></span></div>
+    </section>
+  </div>
+
+  <!-- ============ SAVE / LOAD ============ -->
+  <div class="panel" id="panel-save">
+    <details class="explain" open><summary>Keeping and sharing your work</summary>
+      <p>Everything you type is remembered automatically, but only in this browser on this device. To move your work to another computer, share it with a colleague or keep a backup, save it as a plan file. Loading a plan file replaces what is currently in every tab.</p>
+    </details>
+    <section class="box">
+      <h2>Save</h2>
+      <p class="note" style="margin-top:0">The plan file includes the calculators, address plan, Azure, AWS and Google Cloud planners, security rules and the tool inputs.</p>
+      <div class="btns">
+        <button class="btn" type="button" id="sv-download">Download plan file</button>
+        <button class="btn ghost" type="button" id="sv-copy">Copy plan as text</button>
+      </div>
+      <div class="hint" id="sv-msg"></div>
+    </section>
+    <section class="box">
+      <h2>Load</h2>
+      <div class="btns"><label class="btn ghost" for="ld-file" style="display:inline-block;margin:0;cursor:pointer">Open a plan file</label><input type="file" id="ld-file" accept=".json,application/json" hidden></div>
+      <label for="ld-text" style="margin-top:16px">Or paste plan text</label>
+      <textarea id="ld-text" spellcheck="false" placeholder='{"app":"subnet-planner", ...}'></textarea>
+      <div class="btns" style="margin-top:10px"><button class="btn" type="button" id="ld-apply">Load pasted plan</button></div>
+      <div id="ld-msg"></div>
+    </section>
+  </div>
+
+  <!-- ============ CHEAT SHEET ============ -->
+  <div class="panel" id="panel-cheat">
+    <section class="box">
+      <h2>IPv4 prefix reference</h2>
+      <p class="note" style="margin-top:0">Azure and AWS usable = addresses minus the 5 each cloud reserves; Google Cloud reserves 4. Azure subnets can be no smaller than /29, AWS subnets no smaller than /28.</p>
+      <details class="explain"><summary>What each column means</summary><ul>
+        <li><b>Prefix</b>: how many of the 32 bits are the network part, written after the slash.</li>
+        <li><b>Netmask</b>: the same prefix written as an address. Some devices and older tools want this form.</li>
+        <li><b>Wildcard</b>: the mask with ones and zeros swapped. Cisco access lists and some firewall rules use it.</li>
+        <li><b>Addresses</b>: the total size of the block, always a power of two.</li>
+        <li><b>Usable hosts</b>: in a normal network, total minus 2 (network and broadcast addresses). /31 is a special case for links between two routers and /32 means a single address.</li>
+        <li><b>Azure usable</b>: total minus 5, because Azure reserves 5 addresses per subnet.</li>
+        <li><b>Google Cloud usable</b>: total minus 4, because Google reserves 4 addresses per subnet. Its smallest subnet is /29, like Azure.</li>
+        <li><b>AWS usable</b>: also total minus 5, because AWS reserves 5 too. The difference is that AWS stops at /28, so a /29 is not possible there.</li>
+      </ul></details>
+      <div class="tablewrap"><table id="cheat-table"></table></div>
+    </section>
+  </div>
+  <p class="site-foot">Created by <a href="https://www.linkedin.com/in/emmanuel-bairaktaris/" target="_blank" rel="noopener">Emmanuel Bairaktaris</a> · <a href="./">All projects</a> · MIT License</p>
+</div>
+
+<script>
+/* ---------- core IPv4 math ---------- */
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt = n => n.toLocaleString('en-US');
+
+function ipToInt(s){
+  const p = String(s).trim().split('.');
+  if (p.length !== 4) return null;
+  let n = 0;
+  for (const x of p){ if (!/^\d{1,3}$/.test(x)) return null; const v = +x; if (v > 255) return null; n = n * 256 + v; }
+  return n;
+}
+function intToIp(n){ n = n >>> 0; return [n >>> 24, (n >>> 16) & 255, (n >>> 8) & 255, n & 255].join('.'); }
+function maskOf(p){ return p === 0 ? 0 : (0xFFFFFFFF << (32 - p)) >>> 0; }
+function maskToPrefix(m){
+  const inv = (~m) >>> 0;
+  if ((inv & ((inv + 1) >>> 0)) !== 0) return null;
+  let c = 0; for (let i = 0; i < 32; i++) if ((m >>> i) & 1) c++;
+  return c;
+}
+function parseCidr(str){
+  const m = String(str).trim().match(/^(\d+\.\d+\.\d+\.\d+)\s*(?:\/\s*(\S+)|\s+(\S+))?$/);
+  if (!m) throw new Error('Enter an address like 10.0.0.0/16');
+  const ip = ipToInt(m[1]);
+  if (ip === null) throw new Error(`"${m[1]}" is not a valid IPv4 address (each part must be 0–255)`);
+  const mp = m[2] || m[3];
+  if (!mp) throw new Error('Add a prefix (like /24) or a subnet mask');
+  let p;
+  if (/^\d{1,2}$/.test(mp)){ p = +mp; if (p > 32) throw new Error('Prefix must be between 0 and 32'); }
+  else {
+    const mi = ipToInt(mp);
+    if (mi === null) throw new Error(`"${mp}" is not a valid prefix or mask`);
+    p = maskToPrefix(mi);
+    if (p === null) throw new Error(`${mp} is not a valid subnet mask (the 1-bits must be contiguous)`);
+  }
+  return { ip, p };
+}
+function block(ip, p){
+  const mask = maskOf(p), net = (ip & mask) >>> 0, size = 2 ** (32 - p);
+  return { ip, p, mask, net, size, bc: net + size - 1, wild: (~mask) >>> 0 };
+}
+function cidrStr(net, p){ return intToIp(net) + '/' + p; }
+function inBlock(ip, cidr){ const { ip: n, p } = parseCidr(cidr); const m = maskOf(p); return ((ip & m) >>> 0) === ((n & m) >>> 0); }
+
+const RANGES = [
+  ['10.0.0.0/8','Private (RFC 1918)'],['172.16.0.0/12','Private (RFC 1918)'],['192.168.0.0/16','Private (RFC 1918)'],
+  ['100.64.0.0/10','Shared / CGNAT (RFC 6598)'],['127.0.0.0/8','Loopback'],['169.254.0.0/16','Link-local'],
+  ['0.0.0.0/8','"This network"'],['192.0.2.0/24','Documentation'],['198.51.100.0/24','Documentation'],['203.0.113.0/24','Documentation'],
+  ['198.18.0.0/15','Benchmarking'],['224.0.0.0/4','Multicast'],['240.0.0.0/4','Reserved']
+];
+function ipType(ip){ for (const [c, t] of RANGES) if (inBlock(ip, c)) return t; return 'Public'; }
+function ipClass(ip){ const o = ip >>> 24; return o < 128 ? 'A' : o < 192 ? 'B' : o < 224 ? 'C' : o < 240 ? 'D (multicast)' : 'E (reserved)'; }
+function usableHosts(p){ return p === 32 ? 1 : p === 31 ? 2 : 2 ** (32 - p) - 2; }
+
+function rangeToCidrs(start, end){
+  const out = [];
+  while (start <= end){
+    let size = 1;
+    while (size < 2 ** 32 && start % (size * 2) === 0 && start + size * 2 - 1 <= end) size *= 2;
+    out.push({ net: start, p: 32 - Math.log2(size), size });
+    start += size;
+  }
+  return out;
+}
+
+/* ---------- tabs & theme ---------- */
+document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {
+  document.querySelectorAll('.tab').forEach(x => x.setAttribute('aria-selected', x === t));
+  document.querySelectorAll('.panel').forEach(p => p.classList.toggle('active', p.id === 'panel-' + t.dataset.tab));
+  try { localStorage.setItem('snc.tab', t.dataset.tab); } catch(e){}
+}));
+$('#themeBtn').addEventListener('click', () => {
+  const cur = document.documentElement.dataset.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  const next = cur === 'dark' ? 'light' : 'dark';
+  document.documentElement.dataset.theme = next;
+  try { localStorage.setItem('snc.theme', next); } catch(e){}
+});
+try {
+  const th = localStorage.getItem('snc.theme'); if (th) document.documentElement.dataset.theme = th;
+  const tb = localStorage.getItem('snc.tab'); if (tb) document.querySelector(`.tab[data-tab="${tb}"]`)?.click();
+} catch(e){}
+
+/* ---------- beginner mode ---------- */
+const bb = $('#beginnerBox');
+function setBeginner(on){ document.body.classList.toggle('beginner', on); bb.checked = on; try { localStorage.setItem('snc.beginner', on ? '1' : '0'); } catch(e){} }
+bb.addEventListener('change', () => setBeginner(bb.checked));
+let bSaved = null; try { bSaved = localStorage.getItem('snc.beginner'); } catch(e){}
+setBeginner(bSaved !== '0');
+
+/* ---------- calculator ---------- */
+let calcBlock = null;
+function renderCalc(){
+  const errEl = $('#calc-err');
+  let r;
+  try { r = parseCidr($('#calc-in').value); errEl.innerHTML = ''; }
+  catch(e){ errEl.innerHTML = `<div class="err">${esc(e.message)}</div>`; return; }
+  const b = block(r.ip, r.p); calcBlock = b;
+  const first = b.p >= 31 ? b.net : b.net + 1, last = b.p >= 31 ? b.bc : b.bc - 1;
+  const o = b.net.toString(16).padStart(8, '0').toUpperCase();
+  const rev = (() => { const parts = intToIp(b.net).split('.'); const k = Math.max(1, Math.ceil(b.p / 8)); return parts.slice(0, Math.min(k,3)).reverse().join('.') + '.in-addr.arpa'; })();
+  const h2 = 32 - b.p;
+  const TYPE_EXPLAIN = {
+    'Private (RFC 1918)': 'Reserved for internal networks such as homes, offices and Azure VNets. Not routed on the public internet, so anyone can reuse these ranges privately.',
+    'Shared / CGNAT (RFC 6598)': 'Set aside for internet providers doing carrier-grade NAT. Azure also accepts it for VNets when private ranges run out.',
+    'Loopback': 'Means this device itself. Traffic to it never leaves the machine.',
+    'Link-local': 'Self-assigned when no DHCP server answers. Azure uses 169.254.169.254 for its instance metadata service.',
+    '"This network"': 'Special-purpose range that cannot be assigned to devices.',
+    'Documentation': 'Reserved for examples in books and documentation; never used on real networks.',
+    'Benchmarking': 'Reserved for network performance testing.',
+    'Multicast': 'Used to send one stream to many listeners at once, not for individual devices.',
+    'Reserved': 'Reserved for future use and not usable.',
+    'Public': 'Routable on the internet and owned by a specific organisation or provider. Avoid using public ranges you do not own inside a private network.'
+  };
+  const CELL_EXPLAIN = {
+    'Network': `The block's own address: your IP with all ${h2} host bits set to 0. It names the subnet and is not given to any device.`,
+    'Netmask': `The /${b.p} prefix written as an address: ${b.p} ones followed by ${h2} zeros. Older devices and tools ask for this form.`,
+    'Wildcard (ACL) mask': 'The mask with ones and zeros swapped. Cisco access lists and OSPF use this form.',
+    'First usable host': b.p >= 31 ? 'In a /31 or /32 every address is usable.' : 'The first address you can give a device: one after the network address. Routers and gateways often take this one.',
+    'Last usable host': b.p >= 31 ? 'In a /31 or /32 every address is usable.' : 'The last address you can give a device: one before the broadcast address.',
+    'Broadcast': b.p >= 31 ? 'Router-to-router links (/31) and single addresses (/32) have no broadcast address.' : 'All host bits set to 1. A message sent here reaches every device in the subnet, so it cannot belong to one device.',
+    'Total addresses': `2 to the power of the ${h2} host bits.`,
+    'Usable hosts': b.p >= 31 ? 'Special case: no network or broadcast address is set aside.' : 'Total minus 2: the network address and the broadcast address.',
+    'Azure usable (−5)': b.p <= 29 ? 'Azure sets aside 5 addresses in every subnet instead of 2. The Azure tab explains which ones.' : 'Azure subnets cannot be smaller than /29 (8 addresses).',
+    'AWS usable (−5)': b.p <= 28 ? 'AWS also sets aside 5 addresses per subnet, but different ones (the AWS tab explains which).' : 'AWS subnets cannot be smaller than /28 (16 addresses).',
+    'Google Cloud usable (−4)': b.p <= 29 ? 'Google Cloud sets aside only 4 addresses per subnet (the Google Cloud tab explains which).' : 'Google Cloud subnets cannot be smaller than /29 (8 addresses).',
+    'Address type': TYPE_EXPLAIN[ipType(r.ip)] || '',
+    'Class': 'The old pre-1993 system based on the first number. Only of historical interest now; the prefix is what really defines a network.',
+    'Hex network': 'The network address in hexadecimal, as some tools and logs show it.',
+    'Previous block': 'The neighbouring block of the same size just before this one.',
+    'Next block': 'The next block of the same size, handy when you need the next free subnet.',
+    'Reverse DNS zone': 'The DNS zone holding PTR records, which turn addresses in this range back into names.'
+  };
+  const cells = [
+    ['Network', cidrStr(b.net, b.p)], ['Netmask', intToIp(b.mask)], ['Wildcard (ACL) mask', intToIp(b.wild)],
+    ['First usable host', intToIp(first)], ['Last usable host', intToIp(last)], ['Broadcast', b.p >= 31 ? 'none (/'+b.p+')' : intToIp(b.bc)],
+    ['Total addresses', fmt(b.size)], ['Usable hosts', fmt(usableHosts(b.p))], ['Azure usable (−5)', b.p <= 29 ? fmt(b.size - 5) : 'not allowed in Azure'], ['AWS usable (−5)', b.p <= 28 ? fmt(b.size - 5) : 'not allowed in AWS'], ['Google Cloud usable (−4)', b.p <= 29 ? fmt(b.size - 4) : 'not allowed in Google Cloud'],
+    ['Address type', ipType(r.ip)], ['Class', ipClass(r.ip)], ['Hex network', '0x' + o],
+    ['Previous block', b.net === 0 ? '—' : cidrStr(b.net - b.size, b.p)], ['Next block', b.bc >= 0xFFFFFFFF ? '—' : cidrStr(b.bc + 1, b.p)],
+    ['Reverse DNS zone', rev],
+  ];
+  $('#calc-out').innerHTML = `<div class="grid-out">${cells.map(([k, v]) => `<div class="cell"><div class="k">${k}</div><div class="v">${esc(v)}</div><div class="explain-txt">${esc(CELL_EXPLAIN[k] || '')}</div></div>`).join('')}</div>`;
+
+  const bitsRow = (n) => {
+    let h = '<div class="bits">';
+    for (let o = 0; o < 4; o++){
+      h += '<div class="oct">';
+      for (let i = 0; i < 8; i++){ const idx = o * 8 + i; const bit = (n >>> (31 - idx)) & 1; h += `<span class="bit ${idx < b.p ? 'n' : 'h'}">${bit}</span>`; }
+      h += '</div>';
+    }
+    return h + '</div>';
+  };
+  $('#calc-ruler').innerHTML =
+    `<div class="bitlabel">Address ${intToIp(r.ip)}</div>${bitsRow(r.ip)}
+     <div class="bitlabel">Mask ${intToIp(b.mask)}</div>${bitsRow(b.mask)}
+     <div class="legend"><span><span class="sw" style="background:var(--accent)"></span>${b.p} network bits</span><span><span class="sw" style="background:var(--panel2);border:1px solid var(--line)"></span>${32 - b.p} host bits</span></div>
+     <div class="explain-txt" style="max-width:80ch">Each box is one bit. The ${b.p} blue bits are the network part and are identical for every address in this subnet. The ${32 - b.p} grey bits are free to change, giving 2<sup>${32 - b.p}</sup> = ${fmt(b.size)} possible addresses. The mask is simply ones over the network bits and zeros over the host bits; a device combines its address with the mask to work out which network it is on.</div>`;
+
+  const sel = $('#split-prefix'), prev = +sel.value;
+  sel.innerHTML = '';
+  for (let p = b.p + 1; p <= Math.min(32, b.p + 20); p++){
+    const o = document.createElement('option'); o.value = p; o.textContent = `/${p}  —  ${fmt(2 ** (p - b.p))} subnets of ${fmt(2 ** (32 - p))}`; sel.appendChild(o);
+  }
+  if (!sel.options.length){ $('#split-sum').textContent = 'A /32 cannot be split.'; $('#split-table').innerHTML = ''; $('#split-more').textContent=''; return; }
+  sel.value = (prev > b.p && prev <= Math.min(32, b.p + 20)) ? prev : (b.p < 24 ? 24 : b.p + 1);
+  renderSplit();
+}
+function renderSplit(){
+  const b = calcBlock; if (!b) return;
+  const np = +$('#split-prefix').value, size = 2 ** (32 - np), count = 2 ** (np - b.p), shown = Math.min(count, 256);
+  $('#split-sum').innerHTML = `<b>${fmt(count)}</b> subnets, ${fmt(usableHosts(np))} usable hosts each`;
+  let h = '<tr><th>#</th><th>Subnet</th><th>First host</th><th>Last host</th><th>Broadcast</th></tr>';
+  for (let i = 0; i < shown; i++){
+    const net = b.net + i * size, bc = net + size - 1;
+    const f = np >= 31 ? net : net + 1, l = np >= 31 ? bc : bc - 1;
+    h += `<tr><td>${i + 1}</td><td class="m">${cidrStr(net, np)}</td><td class="m">${intToIp(f)}</td><td class="m">${intToIp(l)}</td><td class="m">${np >= 31 ? '—' : intToIp(bc)}</td></tr>`;
+  }
+  $('#split-table').innerHTML = h;
+  $('#split-explain').innerHTML = `Going from /${b.p} to /${np} moves ${np - b.p} bit${np - b.p > 1 ? 's' : ''} from the host part to the network part. Each moved bit doubles the number of subnets and halves their size: 2<sup>${np - b.p}</sup> = ${fmt(count)} subnets of ${fmt(size)} addresses, with ${fmt(usableHosts(np))} usable in each after setting aside the network and broadcast addresses.`;
+  $('#split-more').textContent = count > shown ? `Showing the first ${shown} of ${fmt(count)} subnets.` : '';
+}
+$('#calc-in').addEventListener('input', renderCalc);
+$('#split-prefix').addEventListener('change', renderSplit);
+
+/* ---------- cheat sheet ---------- */
+(function(){
+  let h = '<tr><th>Prefix</th><th>Netmask</th><th>Wildcard</th><th>Addresses</th><th>Usable hosts</th><th>Azure usable</th><th>AWS usable</th><th>Google Cloud usable</th></tr>';
+  for (let p = 8; p <= 32; p++){
+    const m = maskOf(p), size = 2 ** (32 - p);
+    h += `<tr><td class="m">/${p}</td><td class="m">${intToIp(m)}</td><td class="m">${intToIp((~m) >>> 0)}</td><td class="m">${fmt(size)}</td><td class="m">${fmt(usableHosts(p))}</td><td class="m">${p <= 29 ? fmt(size - 5) : '—'}</td><td class="m">${p <= 28 ? fmt(size - 5) : '—'}</td><td class="m">${p <= 29 ? fmt(size - 4) : '—'}</td></tr>`;
+  }
+  $('#cheat-table').innerHTML = h;
+})();
+
+/* ---------- Azure planner ---------- */
+const AZ_TYPES = {
+  custom:   { label:'Workload (VMs, general)' },
+  gateway:  { label:'VPN / ExpressRoute gateway', name:'GatewaySubnet', min:29, rec:27, hard:false },
+  firewall: { label:'Azure Firewall', name:'AzureFirewallSubnet', min:26, rec:26, hard:true },
+  fwmgmt:   { label:'Azure Firewall management', name:'AzureFirewallManagementSubnet', min:26, rec:26, hard:true },
+  bastion:  { label:'Azure Bastion', name:'AzureBastionSubnet', min:26, rec:26, hard:true },
+  routesrv: { label:'Azure Route Server', name:'RouteServerSubnet', min:27, rec:27, hard:true },
+  appgw:    { label:'Application Gateway v2', rec:24, min:29 },
+  aks:      { label:'AKS node pool', rec:24, min:29 },
+  pe:       { label:'Private endpoints', rec:27, min:29 },
+  appsvc:   { label:'App Service VNet integration', rec:26, min:28, hard:true, deleg:'Microsoft.Web/serverFarms' },
+  sqlmi:    { label:'SQL Managed Instance', rec:26, min:27, hard:true, deleg:'Microsoft.Sql/managedInstances' },
+  dnsin:    { label:'DNS Private Resolver inbound', rec:28, min:28, hard:true, deleg:'Microsoft.Network/dnsResolvers' },
+  dnsout:   { label:'DNS Private Resolver outbound', rec:28, min:28, hard:true, deleg:'Microsoft.Network/dnsResolvers' },
+};
+const AZ_DESC = {
+  custom: `An ordinary subnet for virtual machines, containers or anything else you run. No special Azure rules apply.`,
+  gateway: `Holds the VPN or ExpressRoute gateway that connects this VNet to your offices or datacenter. Azure requires the exact name GatewaySubnet. /27 is recommended so there is room for more connections and for running two gateway instances.`,
+  firewall: `Holds Azure Firewall, which inspects and filters traffic going in and out. Azure requires the name AzureFirewallSubnet and at least /26 so the firewall can scale out.`,
+  fwmgmt: `A separate path for Azure Firewall's own management traffic. Needed for the Basic tier and when all internet traffic is forced through your offices. Needs /26.`,
+  bastion: `Azure Bastion lets you open RDP or SSH sessions to your VMs from the browser, without giving the VMs public IPs. Needs the exact name AzureBastionSubnet and /26 or larger.`,
+  routesrv: `Azure Route Server swaps routing information (BGP) with network appliances such as third-party firewalls. Needs the name RouteServerSubnet and /27 or larger.`,
+  appgw: `Application Gateway is a web traffic load balancer with an optional web application firewall. The v2 version adds instances as load grows and each one takes an IP, so Microsoft recommends a /24.`,
+  aks: `Nodes of a Kubernetes (AKS) cluster. With Azure CNI Overlay only the nodes use VNet addresses. With classic Azure CNI every pod also takes one, so the subnet must be much larger.`,
+  pe: `Private endpoints give Azure services such as Storage, SQL Database or Key Vault a private address inside your VNet, so traffic never crosses the internet. Each endpoint uses one IP.`,
+  appsvc: `Lets App Service and Function apps reach resources inside the VNet. The subnet is delegated (dedicated) to App Service; instances use extra IPs while scaling, so /26 is recommended and /28 is the minimum.`,
+  sqlmi: `A dedicated, delegated subnet for Azure SQL Managed Instance. Minimum /27; /26 or larger leaves room for scaling and maintenance updates.`,
+  dnsin: `The inbound side of Azure DNS Private Resolver: lets servers in your offices look up names in Azure private DNS zones. Delegated subnet, /28 minimum.`,
+  dnsout: `The outbound side of Azure DNS Private Resolver: forwards lookups from Azure to DNS servers in your offices. Delegated subnet, /28 minimum.`
+};
+for (const k in AZ_DESC) AZ_TYPES[k].desc = AZ_DESC[k];
+const COLORS = ['#0F6CBD','#0B7A5A','#8A3FFC','#C65D00','#B4235A','#00728F','#5E6C00','#6B4E9B','#A33F2B','#2E6B9E'];
+const PRESETS = {
+  hub: { name:'vnet-hub', space:'10.0.0.0/22', rg:'rg-network', loc:'westeurope', subnets:[
+    { name:'GatewaySubnet', type:'gateway', mode:'prefix', value:'27' },
+    { name:'AzureFirewallSubnet', type:'firewall', mode:'prefix', value:'26' },
+    { name:'AzureBastionSubnet', type:'bastion', mode:'prefix', value:'26' },
+    { name:'RouteServerSubnet', type:'routesrv', mode:'prefix', value:'27' },
+    { name:'snet-dns-inbound', type:'dnsin', mode:'prefix', value:'28' },
+    { name:'snet-shared-services', type:'custom', mode:'hosts', value:'100' },
+  ]},
+  spoke: { name:'vnet-app-prod', space:'10.1.0.0/20', rg:'rg-app-prod', loc:'westeurope', subnets:[
+    { name:'snet-web', type:'custom', mode:'hosts', value:'200' },
+    { name:'snet-app', type:'custom', mode:'hosts', value:'120' },
+    { name:'snet-data', type:'custom', mode:'hosts', value:'25' },
+    { name:'snet-appgw', type:'appgw', mode:'prefix', value:'24' },
+    { name:'snet-privateendpoints', type:'pe', mode:'prefix', value:'27' },
+    { name:'snet-appsvc-integration', type:'appsvc', mode:'prefix', value:'26' },
+  ]},
+};
+let st;
+try { st = JSON.parse(localStorage.getItem('snc.azure')); } catch(e){}
+if (!st || !Array.isArray(st.subnets)) st = JSON.parse(JSON.stringify(PRESETS.spoke));
+let codeKind = 'cli', lastPlan = null;
+
+function save(){ try { localStorage.setItem('snc.azure', JSON.stringify(st)); } catch(e){} }
+function loadPreset(p){ st = JSON.parse(JSON.stringify(p)); syncTop(); renderRows(); plan(); }
+function syncTop(){ $('#az-name').value = st.name; $('#az-space').value = st.space; $('#az-rg').value = st.rg; $('#az-loc').value = st.loc; }
+['name','space','rg','loc'].forEach(k => $('#az-' + k).addEventListener('input', e => { st[k] = e.target.value; plan(); }));
+
+function renderRows(){
+  const typeOpts = Object.entries(AZ_TYPES).map(([k, t]) => `<option value="${k}">${esc(t.label)}</option>`).join('');
+  $('#az-rows').innerHTML = st.subnets.map((s, i) => {
+    const t = AZ_TYPES[s.type] || AZ_TYPES.custom, fixed = !!t.name;
+    const ph = s.mode === 'hosts' ? 'e.g. 50' : s.mode === 'prefix' ? 'e.g. 24' : 'e.g. 10.0.1.0/24';
+    return `<div class="srow" data-i="${i}">
+      <div><label>Name</label><input data-f="name" value="${esc(s.name)}" ${fixed ? 'readonly title="Azure requires this exact name"' : ''}></div>
+      <div><label>Purpose</label><select data-f="type">${typeOpts}</select></div>
+      <div><label>Size by</label><select data-f="mode"><option value="hosts">Hosts needed</option><option value="prefix">Prefix length</option><option value="cidr">Exact CIDR</option></select></div>
+      <div><label>${s.mode === 'hosts' ? 'Hosts' : s.mode === 'prefix' ? 'Prefix (/n)' : 'CIDR'}</label><input data-f="value" value="${esc(s.value)}" placeholder="${ph}" spellcheck="false"></div>
+      <div class="rm"><button class="btn danger small" type="button" data-rm="${i}" aria-label="Remove ${esc(s.name)}">Remove</button></div>
+      <div class="explain-txt" style="grid-column:1/-1;margin-top:0"><b>${esc(t.label)}:</b> ${t.desc}</div>
+    </div>`;
+  }).join('') || '<p class="note">No subnets yet. Add one to start carving up the address space.</p>';
+  document.querySelectorAll('#az-rows .srow').forEach(row => {
+    const s = st.subnets[+row.dataset.i];
+    row.querySelector('[data-f="type"]').value = s.type;
+    row.querySelector('[data-f="mode"]').value = s.mode;
+  });
+}
+$('#az-rows').addEventListener('input', e => {
+  const row = e.target.closest('.srow'); if (!row) return;
+  const s = st.subnets[+row.dataset.i], f = e.target.dataset.f;
+  if (f === 'name' || f === 'value'){ s[f] = e.target.value; plan(); }
+});
+$('#az-rows').addEventListener('change', e => {
+  const row = e.target.closest('.srow'); if (!row) return;
+  const s = st.subnets[+row.dataset.i], f = e.target.dataset.f;
+  if (f === 'type'){
+    s.type = e.target.value; const t = AZ_TYPES[s.type];
+    if (t.name) s.name = t.name;
+    else if (Object.values(AZ_TYPES).some(x => x.name === s.name)) s.name = 'snet-' + s.type;
+    if (t.rec){ s.mode = 'prefix'; s.value = String(t.rec); }
+    renderRows(); plan();
+  } else if (f === 'mode'){
+    s.mode = e.target.value; s.value = s.mode === 'hosts' ? '50' : s.mode === 'prefix' ? '24' : '';
+    renderRows(); plan();
+  }
+});
+$('#az-rows').addEventListener('click', e => {
+  const b = e.target.closest('[data-rm]'); if (!b) return;
+  st.subnets.splice(+b.dataset.rm, 1); renderRows(); plan();
+});
+$('#az-add').addEventListener('click', () => {
+  st.subnets.push({ name:'snet-' + (st.subnets.length + 1), type:'custom', mode:'hosts', value:'50' });
+  renderRows(); plan();
+  const ins = document.querySelectorAll('#az-rows [data-f="name"]'); ins[ins.length - 1]?.focus();
+});
+$('#preset-hub').addEventListener('click', () => loadPreset(PRESETS.hub));
+$('#preset-spoke').addEventListener('click', () => loadPreset(PRESETS.spoke));
+$('#preset-clear').addEventListener('click', () => loadPreset({ name:'vnet-new', space:'10.0.0.0/16', rg:'rg-network', loc:'westeurope', subnets:[] }));
+
+const AZ_FORBIDDEN = [['224.0.0.0/4','multicast'],['255.255.255.255/32','broadcast'],['127.0.0.0/8','loopback'],['169.254.0.0/16','link-local'],['168.63.129.16/32','Azure platform (WireServer)']];
+
+function plan(){
+  save();
+  const errors = [], warns = [], results = [];
+  let v;
+  try {
+    const r = parseCidr(st.space); v = block(r.ip, r.p);
+    if (v.net !== r.ip) warns.push(`${st.space.trim()} is not a network boundary — using ${cidrStr(v.net, v.p)}.`);
+    if (v.p < 2 || v.p > 29) errors.push('A VNet address space must be between /2 and /29.');
+    for (const [c, why] of AZ_FORBIDDEN){ const f = parseCidr(c); const fb = block(f.ip, f.p); if (fb.net <= v.bc && v.net <= fb.bc) errors.push(`The address space overlaps ${c} (${why}), which Azure does not allow.`); }
+    const t = ipType(v.net);
+    if (!t.startsWith('Private') && !t.startsWith('Shared')) warns.push(`${cidrStr(v.net, v.p)} is ${t.toLowerCase()} space. Azure allows it, but it will not be routable to the internet from this VNet. Use RFC 1918 ranges unless you own this block.`);
+  } catch(e){ errors.push('Address space: ' + e.message); }
+
+  if (!v){ return renderPlan({ v:null, results, errors, warns, free:[] }); }
+
+  const names = {};
+  st.subnets.forEach((s, i) => {
+    const t = AZ_TYPES[s.type] || AZ_TYPES.custom;
+    const item = { i, s, t, notes:[] };
+    const nm = (s.name || '').trim();
+    if (!nm) item.notes.push(['err','Name required']);
+    else if (names[nm.toLowerCase()]) item.notes.push(['err','Duplicate name']);
+    names[nm.toLowerCase()] = 1;
+    try {
+      const val = String(s.value).trim();
+      if (s.mode === 'hosts'){
+        if (!/^\d+$/.test(val) || +val < 1) throw new Error('Enter a host count');
+        const need = +val + 5; item.p = Math.min(29, 32 - Math.ceil(Math.log2(need)));
+        item.why = `${fmt(+val)} hosts + 5 reserved`;
+        item.hosts = +val; item.rawP = 32 - Math.ceil(Math.log2(need));
+      } else if (s.mode === 'prefix'){
+        const pv = val.replace(/^\//, '');
+        if (!/^\d{1,2}$/.test(pv) || +pv > 32) throw new Error('Enter a prefix like 24');
+        item.p = +pv;
+      } else {
+        const r = parseCidr(val); const b = block(r.ip, r.p);
+        if (b.net !== r.ip) throw new Error(`Not a network address — did you mean ${cidrStr(b.net, b.p)}?`);
+        item.p = r.p; item.fixed = b.net;
+      }
+      if (item.p > 29) throw new Error('Azure subnets must be /29 or larger');
+      if (item.p < v.p) throw new Error(`Bigger than the VNet (/${v.p})`);
+      if (t.min && item.p > t.min) item.notes.push([t.hard ? 'err' : 'warn', `${t.name || t.label} needs /${t.min} or larger`]);
+      else if (t.rec && item.p > t.rec) item.notes.push(['warn', `/${t.rec} or larger recommended`]);
+      item.size = 2 ** (32 - item.p);
+    } catch(e){ item.notes.push(['err', e.message]); item.bad = true; }
+    results.push(item);
+  });
+
+  const alloc = [];
+  const overlaps = (a, b) => a.start <= b.end && b.start <= a.end;
+  for (const it of results.filter(r => !r.bad && r.fixed !== undefined)){
+    const seg = { start: it.fixed, end: it.fixed + it.size - 1, it };
+    if (seg.start < v.net || seg.end > v.bc){ it.notes.push(['err','Outside the VNet address space']); it.bad = true; continue; }
+    const clash = alloc.find(a => overlaps(a, seg));
+    if (clash){ it.notes.push(['err', `Overlaps ${clash.it.s.name}`]); it.bad = true; continue; }
+    alloc.push(seg); it.net = seg.start;
+  }
+  const auto = results.filter(r => !r.bad && r.fixed === undefined).sort((a, b) => b.size - a.size || a.i - b.i);
+  for (const it of auto){
+    alloc.sort((a, b) => a.start - b.start);
+    let cur = v.net, placed = false;
+    const gaps = [];
+    for (const a of alloc){ if (a.start > cur) gaps.push([cur, a.start - 1]); cur = Math.max(cur, a.end + 1); }
+    if (cur <= v.bc) gaps.push([cur, v.bc]);
+    for (const [gs, ge] of gaps){
+      const s0 = Math.ceil(gs / it.size) * it.size;
+      if (s0 + it.size - 1 <= ge){ alloc.push({ start: s0, end: s0 + it.size - 1, it }); it.net = s0; placed = true; break; }
+    }
+    if (!placed){ it.notes.push(['err', `No room left for a /${it.p}`]); it.bad = true; }
+  }
+  alloc.sort((a, b) => a.start - b.start);
+  const free = []; let cur = v.net;
+  for (const a of alloc){ if (a.start > cur) free.push(...rangeToCidrs(cur, a.start - 1)); cur = Math.max(cur, a.end + 1); }
+  if (cur <= v.bc) free.push(...rangeToCidrs(cur, v.bc));
+
+  if (st.subnets.some(s => s.type === 'firewall') && st.subnets.some(s => s.type === 'fwmgmt') === false)
+    warns.push('Azure Firewall Basic SKU, and forced tunnelling, also need an AzureFirewallManagementSubnet (/26).');
+  renderPlan({ v, results, errors, warns, free, alloc });
+}
+
+function explainSubnet(r){
+  const parts = [], sz = r.size, p = r.p, n = r.net, bc = n + sz - 1;
+  if (r.s.mode === 'hosts' && r.hosts){
+    const need = r.hosts + 5;
+    if (r.rawP > 29) parts.push(`You need ${fmt(r.hosts)} address${r.hosts > 1 ? 'es' : ''}. Adding Azure's 5 reserved makes ${fmt(need)}, but Azure's smallest subnet is a /29 (8 addresses), so it gets a /29 with ${sz - 5} usable.`);
+    else parts.push(`You need ${fmt(r.hosts)} devices. Adding Azure's 5 reserved addresses makes ${fmt(need)}. Subnet sizes only come in powers of two and ${fmt(sz / 2)} is too small, so it gets ${fmt(sz)} addresses, a /${p}. That leaves ${fmt(sz - 5 - r.hosts)} spare for growth.`);
+  } else if (r.s.mode === 'prefix') parts.push(`You chose /${p}: ${32 - p} host bits, so 2<sup>${32 - p}</sup> = ${fmt(sz)} addresses, ${fmt(sz - 5)} usable after Azure's 5.`);
+  else parts.push(`You pinned this subnet to ${cidrStr(n, p)}: ${fmt(sz)} addresses, ${fmt(sz - 5)} usable.`);
+  if (r.s.mode !== 'cidr') parts.push(`It sits at the first free spot that starts on a multiple of ${fmt(sz)}, because every subnet has to line up with its own size.`);
+  parts.push(`Azure keeps ${intToIp(n)} (network address), ${intToIp(n + 1)} (default gateway, the subnet's router), ${intToIp(n + 2)} and ${intToIp(n + 3)} (Azure DNS) and ${intToIp(bc)} (broadcast). Your resources get ${intToIp(n + 4)} to ${intToIp(bc - 1)}.`);
+  if (r.t.min && p > r.t.min) parts.push(`Azure needs at least /${r.t.min} for this purpose${r.t.hard ? ', so deployment will fail with this size' : ''}.`);
+  else if (r.t.rec && p > r.t.rec) parts.push(`Microsoft recommends /${r.t.rec} (${fmt(2 ** (32 - r.t.rec))} addresses) for this purpose so it has room to scale.`);
+  if (r.t.deleg) parts.push(`The subnet is delegated to ${r.t.deleg}, which means only that service can place resources in it.`);
+  return parts.join(' ');
+}
+function explainBad(r){
+  const t = r.notes.map(x => x[1]).join(' ');
+  if (/No room/.test(t)) return 'There is no free, correctly aligned block this big left in the address space. Make the VNet address space larger, or make some other subnets smaller.';
+  if (/Outside/.test(t)) return 'An exact CIDR has to sit completely inside the VNet address space.';
+  if (/Overlaps/.test(t)) return 'Two subnets in the same VNet cannot share any addresses. Pick a different range or switch one of them to automatic sizing.';
+  if (/network address/.test(t)) return 'A subnet has to start on a boundary that is a multiple of its size. The suggestion in the red note is the block your address falls in.';
+  if (/29 or larger/.test(t)) return 'Azure does not allow subnets smaller than /29 (8 addresses, 3 usable).';
+  if (/Bigger than/.test(t)) return 'A subnet cannot be bigger than the VNet that contains it. Use a longer prefix (a bigger number after the slash) or fewer hosts.';
+  if (/Name|Duplicate/.test(t)) return 'Every subnet in a VNet needs its own unique name.';
+  return 'Fix the value in the Subnets section to place this subnet.';
+}
+function renderPlan(P){
+  lastPlan = P;
+  const { v, results, errors, warns, free } = P;
+  const allMsgs = [...errors.map(m => ['err', m]), ...warns.map(m => ['warn', m])];
+  $('#az-msgs').innerHTML = allMsgs.map(([c, m]) => `<li class="${c}">${esc(m)}</li>`).join('');
+  if (!v){ $('#az-stats').innerHTML = ''; $('#az-map').innerHTML = ''; $('#az-scale').innerHTML = ''; $('#az-table').innerHTML = ''; $('#az-free').innerHTML = ''; renderCode(); return; }
+
+  const placed = results.filter(r => r.net !== undefined && !r.bad);
+  const used = placed.reduce((a, r) => a + r.size, 0);
+  const usable = placed.reduce((a, r) => a + r.size - 5, 0);
+  $('#az-stats').innerHTML = [
+    [cidrStr(v.net, v.p), 'VNet space'], [fmt(v.size), 'Total addresses'], [fmt(used), 'Allocated to subnets'],
+    [fmt(usable), 'Usable by resources'], [fmt(v.size - used), 'Unallocated'], [(used / v.size * 100).toFixed(1) + '%', 'Allocated'],
+  ].map(([n, l]) => `<div class="stat"><div class="n">${n}</div><div class="l">${l}</div></div>`).join('');
+
+  $('#az-map').innerHTML = placed.map(r => {
+    const left = (r.net - v.net) / v.size * 100, w = r.size / v.size * 100, col = COLORS[r.i % COLORS.length];
+    return `<div class="seg" style="left:${left}%;width:${w}%;background:${col}" title="${esc(r.s.name)} — ${cidrStr(r.net, r.p)}">${w > 7 ? esc(r.s.name) : ''}</div>`;
+  }).join('');
+  $('#az-scale').innerHTML = `<span>${intToIp(v.net)}</span><span>${intToIp(v.net + v.size / 2)}</span><span>${intToIp(v.bc)}</span>`;
+
+  const sorted = [...results].sort((a, b) => (a.net ?? Infinity) - (b.net ?? Infinity) || a.i - b.i);
+  let h = '<tr><th></th><th>Subnet</th><th>CIDR</th><th>Usable range</th><th>Usable IPs</th><th>Azure reserved</th><th>Notes</th></tr>';
+  for (const r of sorted){
+    const col = COLORS[r.i % COLORS.length];
+    const notes = r.notes.map(([c, m]) => `<span class="tag ${c}">${esc(m)}</span>`).join('') || (r.why ? `<span class="tag info">${esc(r.why)}</span>` : '<span class="tag ok">OK</span>');
+    if (r.net === undefined || r.bad){
+      h += `<tr><td><span class="sw" style="background:${col};opacity:.35"></span></td><td>${esc(r.s.name)}</td><td class="m">—</td><td class="m">—</td><td class="m">—</td><td>—</td><td>${notes}</td></tr><tr class="explain-row"><td colspan="7">${explainBad(r)}</td></tr>`;
+      continue;
+    }
+    const n = r.net, bc = n + r.size - 1;
+    const resv = `${intToIp(n)} network\n${intToIp(n + 1)} default gateway\n${intToIp(n + 2)}, ${intToIp(n + 3)} Azure DNS\n${intToIp(bc)} broadcast`;
+    h += `<tr><td><span class="sw" style="background:${col}"></span></td><td>${esc(r.s.name)}<div class="hint" style="margin:0">${esc(r.t.label)}</div></td>
+      <td class="m">${cidrStr(n, r.p)}</td><td class="m">${intToIp(n + 4)} – ${intToIp(bc - 1)}</td><td class="m">${fmt(r.size - 5)}</td>
+      <td class="m" title="${esc(resv)}" style="cursor:help">.${n & 255}–.${(n + 3) & 255}, .${bc & 255}</td><td>${notes}</td></tr><tr class="explain-row"><td colspan="7">${explainSubnet(r)}</td></tr>`;
+  }
+  $('#az-table').innerHTML = results.length ? h : '<tr><td>No subnets yet.</td></tr>';
+  $('#az-free').innerHTML = free.length ? free.map(f => `<span>${cidrStr(f.net, f.p)}</span>`).join('') : '<span class="hint" style="margin:0;border:0;background:none">None — the address space is fully allocated.</span>';
+  renderCode();
+}
+
+function renderCode(){
+  const P = lastPlan, v = P && P.v;
+  const ok = v ? P.results.filter(r => r.net !== undefined && !r.bad).sort((a, b) => a.net - b.net) : [];
+  const space = v ? cidrStr(v.net, v.p) : st.space;
+  const q = s => '"' + String(s).replace(/"/g, '\\"') + '"', bq = s => "'" + String(s).replace(/'/g, "\\'") + "'";
+  let out = '';
+  if (codeKind === 'cli'){
+    out = `# Create the virtual network\naz network vnet create \\\n  --resource-group ${q(st.rg)} \\\n  --name ${q(st.name)} \\\n  --location ${q(st.loc)} \\\n  --address-prefixes ${space}\n`;
+    for (const r of ok){
+      out += `\naz network vnet subnet create \\\n  --resource-group ${q(st.rg)} \\\n  --vnet-name ${q(st.name)} \\\n  --name ${q(r.s.name)} \\\n  --address-prefixes ${cidrStr(r.net, r.p)}`;
+      if (r.t.deleg) out += ` \\\n  --delegations ${r.t.deleg}`;
+      out += '\n';
+    }
+  } else if (codeKind === 'bicep'){
+    out = `param location string = ${bq(st.loc)}\n\nresource vnet 'Microsoft.Network/virtualNetworks@2024-05-01' = {\n  name: ${bq(st.name)}\n  location: location\n  properties: {\n    addressSpace: {\n      addressPrefixes: [\n        ${bq(space)}\n      ]\n    }\n    subnets: [\n`;
+    for (const r of ok){
+      out += `      {\n        name: ${bq(r.s.name)}\n        properties: {\n          addressPrefix: ${bq(cidrStr(r.net, r.p))}\n`;
+      if (r.t.deleg) out += `          delegations: [\n            {\n              name: ${bq(r.t.deleg.split('/').pop() + '-delegation')}\n              properties: {\n                serviceName: ${bq(r.t.deleg)}\n              }\n            }\n          ]\n`;
+      out += `        }\n      }\n`;
+    }
+    out += `    ]\n  }\n}\n`;
+  } else if (codeKind === 'ps'){
+    out = `$subnets = @(\n`;
+    out += ok.map(r => {
+      let d = r.t.deleg ? ` -Delegation (New-AzDelegation -Name ${q(r.t.deleg.split('/').pop() + '-delegation')} -ServiceName ${q(r.t.deleg)})` : '';
+      return `  New-AzVirtualNetworkSubnetConfig -Name ${q(r.s.name)} -AddressPrefix ${q(cidrStr(r.net, r.p))}${d}`;
+    }).join(',\n');
+    out += `\n)\n\nNew-AzVirtualNetwork \`\n  -ResourceGroupName ${q(st.rg)} \`\n  -Name ${q(st.name)} \`\n  -Location ${q(st.loc)} \`\n  -AddressPrefix ${q(space)} \`\n  -Subnet $subnets\n`;
+  } else {
+    out = 'vnet,subnet,purpose,cidr,first_usable,last_usable,usable_ips\n';
+    out += ok.map(r => [st.name, r.s.name, r.t.label, cidrStr(r.net, r.p), intToIp(r.net + 4), intToIp(r.net + r.size - 2), r.size - 5].map(x => /[",]/.test(x) ? '"' + String(x).replace(/"/g, '""') + '"' : x).join(',')).join('\n') + '\n';
+  }
+  const skipped = P ? P.results.length - ok.length : 0;
+  if (skipped > 0) out = (codeKind === 'csv' ? '' : `# ${skipped} subnet(s) left out because of errors above\n`) + out;
+  const CODE_EXPLAIN = {
+    cli: 'Commands for the Azure CLI. Open <b>Azure Cloud Shell</b> from the Azure portal (the &gt;_ icon at the top) or run <code>az login</code> in a terminal. Create the resource group first if it does not exist with <code>az group create -n NAME -l REGION</code>, then paste these in. The first command creates the VNet; each one after it adds a subnet.',
+    bicep: 'Bicep is Azure\u2019s infrastructure-as-code language: a file describing the network you want, which Azure builds for you and can rebuild identically any time. Save it as <code>main.bicep</code> and deploy with <code>az deployment group create -g RESOURCE_GROUP -f main.bicep</code>. Best for repeatable setups kept in version control.',
+    ps: 'For Azure PowerShell (the Az module). Run <code>Connect-AzAccount</code> first. The script builds the list of subnets, then creates the VNet with all of them in one step.',
+    csv: 'A plain list you can open in Excel or paste into documentation, so your team knows which ranges are taken.'
+  };
+  $('#code-explain').innerHTML = CODE_EXPLAIN[codeKind];
+  $('#az-code').textContent = out;
+}
+$('#code-tabs').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  codeKind = b.dataset.code;
+  document.querySelectorAll('#code-tabs button').forEach(x => x.setAttribute('aria-pressed', x === b));
+  renderCode();
+});
+$('#copy-code').addEventListener('click', async () => {
+  const txt = $('#az-code').textContent;
+  try { await navigator.clipboard.writeText(txt); $('#copy-msg').textContent = 'Copied'; }
+  catch(e){
+    const r = document.createRange(); r.selectNodeContents($('#az-code'));
+    const s = getSelection(); s.removeAllRanges(); s.addRange(r);
+    $('#copy-msg').textContent = 'Selected — press Ctrl+C / ⌘C to copy';
+  }
+  setTimeout(() => $('#copy-msg').textContent = '', 2500);
+});
+
+/* ---------- overlap checker ---------- */
+function checkOverlap(){
+  const lines = $('#ov-in').value.split('\n').map(l => l.trim()).filter(Boolean);
+  const items = [], bad = [];
+  lines.forEach((l, i) => {
+    const parts = l.split(/\s+/), c = parts.pop(), label = parts.join(' ') || c;
+    try { const r = parseCidr(c); const b = block(r.ip, r.p); items.push({ label, cidr: cidrStr(b.net, b.p), start: b.net, end: b.bc }); }
+    catch(e){ bad.push(`Line ${i + 1}: ${e.message}`); }
+  });
+  const pairs = [];
+  for (let i = 0; i < items.length; i++) for (let j = i + 1; j < items.length; j++){
+    const a = items[i], b = items[j];
+    if (a.start <= b.end && b.start <= a.end){
+      const s = Math.max(a.start, b.start), e = Math.min(a.end, b.end);
+      pairs.push(`${a.label} (${a.cidr}) and ${b.label} (${b.cidr}) share ${rangeToCidrs(s, e).map(x => cidrStr(x.net, x.p)).join(', ')}`);
+    }
+  }
+  let h = '';
+  if (bad.length) h += `<ul class="msgs">${bad.map(m => `<li class="err">${esc(m)}</li>`).join('')}</ul>`;
+  if (items.length < 2) h += '<p class="note">Add at least two ranges to compare.</p>';
+  else if (!pairs.length) h += `<span class="tag ok">No overlaps between ${items.length} ranges — these can be peered or connected.</span>`;
+  else h += `<ul class="msgs">${pairs.map(m => `<li class="err">${esc(m)}</li>`).join('')}</ul>`;
+  $('#ov-out').innerHTML = h;
+  try { localStorage.setItem('snc.overlap', $('#ov-in').value); } catch(e){}
+}
+$('#ov-in').addEventListener('input', checkOverlap);
+$('#ov-add').addEventListener('click', () => {
+  const v = lastPlan && lastPlan.v; if (!v) return;
+  const ta = $('#ov-in'); ta.value = (ta.value.trim() ? ta.value.trim() + '\n' : '') + `${st.name} ${cidrStr(v.net, v.p)}`; checkOverlap();
+});
+let ovSaved = null; try { ovSaved = localStorage.getItem('snc.overlap'); } catch(e){}
+$('#ov-in').value = ovSaved ?? 'vnet-hub 10.0.0.0/22\nvnet-app-prod 10.1.0.0/20\nvnet-legacy 10.1.8.0/24\non-prem 192.168.0.0/16';
+
+/* ---------- AWS planner ---------- */
+const AWS_TYPES = {
+  private:   { label:'Private (app servers)', desc:`Servers that should not be reachable from the internet directly, such as application servers or containers. They reach the internet, when needed, through a NAT gateway in a public subnet.` },
+  public:    { label:'Public (load balancers, NAT)', public:true, desc:`Subnets whose route table points at an Internet Gateway, so resources with a public IP can be reached from the internet. Usually holds only load balancers, NAT gateways and jump hosts; keep servers out of it.` },
+  data:      { label:'Data (databases, caches)', minAz:2, desc:`Isolated subnets for RDS databases, ElastiCache and similar. An RDS DB subnet group needs subnets in at least two Availability Zones, even for a single database.` },
+  alb:       { label:'Load balancers (ALB / NLB)', public:true, min:27, minAz:2, desc:`Dedicated subnets for Application or Network Load Balancers. AWS asks for at least a /27 with 8 free addresses per subnet so the load balancer can scale, in at least two zones.` },
+  eks:       { label:'EKS / Kubernetes', rec:19, minAz:2, desc:`With the default Amazon VPC CNI every pod gets a real VPC address, so Kubernetes uses up IPs very quickly. Large subnets (/19 or bigger) are common, and EKS needs subnets in at least two zones.` },
+  lambda:    { label:'Lambda functions in VPC', desc:`Lambda functions connected to the VPC use network interfaces in these subnets. Leave headroom so scaling and new function versions do not run out of addresses.` },
+  endpoints: { label:'VPC interface endpoints', rec:27, desc:`Interface endpoints (PrivateLink) give AWS services such as S3, ECR or Secrets Manager a private address inside your VPC. Each endpoint uses one address in each zone.` },
+  tgw:       { label:'Transit Gateway attachment', rec:28, desc:`Small dedicated subnets a Transit Gateway uses to connect this VPC to other VPCs and to your offices. AWS recommends a separate /28 in each zone.` },
+  nfw:       { label:'AWS Network Firewall', rec:28, desc:`Dedicated subnets for AWS Network Firewall endpoints, which inspect traffic. A /28 per zone is enough, and nothing else should be placed in them.` },
+  r53:       { label:'Route 53 Resolver endpoints', rec:28, minAz:2, desc:`Lets your offices look up AWS private DNS names, and AWS look up your office names. Each endpoint needs addresses in at least two zones.` },
+};
+const AWS_PRESETS = {
+  threeTier: { name:'vpc-prod', cidr:'10.20.0.0/16', region:'eu-west-1', azs:3, tiers:[
+    { name:'public', type:'public', mode:'prefix', value:'24' },
+    { name:'app', type:'private', mode:'hosts', value:'1000' },
+    { name:'data', type:'data', mode:'prefix', value:'24' },
+    { name:'endpoints', type:'endpoints', mode:'prefix', value:'27' },
+    { name:'tgw', type:'tgw', mode:'prefix', value:'28' },
+  ]},
+  eks: { name:'vpc-eks', cidr:'10.30.0.0/16', region:'eu-west-1', azs:3, tiers:[
+    { name:'lb', type:'alb', mode:'prefix', value:'24' },
+    { name:'eks', type:'eks', mode:'prefix', value:'19' },
+    { name:'data', type:'data', mode:'prefix', value:'25' },
+  ]},
+};
+const AZ_LETTERS = 'abcdef';
+let aw;
+try { aw = JSON.parse(localStorage.getItem('snc.aws')); } catch(e){}
+if (!aw || !Array.isArray(aw.tiers)) aw = JSON.parse(JSON.stringify(AWS_PRESETS.threeTier));
+let awsCodeKind = 'cli', awsLast = null;
+
+function awsSave(){ try { localStorage.setItem('snc.aws', JSON.stringify(aw)); } catch(e){} }
+function awsSyncTop(){ $('#aws-name').value = aw.name; $('#aws-cidr').value = aw.cidr; $('#aws-region').value = aw.region; $('#aws-azs').value = String(aw.azs); }
+function awsLoadPreset(p){ aw = JSON.parse(JSON.stringify(p)); awsSyncTop(); awsRenderRows(); awsPlan(); }
+['name','cidr','region'].forEach(k => $('#aws-' + k).addEventListener('input', e => { aw[k] = e.target.value; awsPlan(); }));
+$('#aws-azs').addEventListener('change', e => { aw.azs = +e.target.value; awsPlan(); });
+$('#aws-preset-3tier').addEventListener('click', () => awsLoadPreset(AWS_PRESETS.threeTier));
+$('#aws-preset-eks').addEventListener('click', () => awsLoadPreset(AWS_PRESETS.eks));
+$('#aws-preset-clear').addEventListener('click', () => awsLoadPreset({ name:'vpc-new', cidr:'10.0.0.0/16', region:'eu-west-1', azs:2, tiers:[] }));
+
+function awsRenderRows(){
+  const opts = Object.entries(AWS_TYPES).map(([k, t]) => `<option value="${k}">${esc(t.label)}</option>`).join('');
+  $('#aws-rows').innerHTML = aw.tiers.map((s, i) => {
+    const t = AWS_TYPES[s.type] || AWS_TYPES.private;
+    return `<div class="srow" data-i="${i}">
+      <div><label>Tier name</label><input data-f="name" value="${esc(s.name)}"></div>
+      <div><label>Purpose</label><select data-f="type">${opts}</select></div>
+      <div><label>Size per zone by</label><select data-f="mode"><option value="hosts">Hosts needed</option><option value="prefix">Prefix length</option></select></div>
+      <div><label>${s.mode === 'hosts' ? 'Hosts per zone' : 'Prefix (/n)'}</label><input data-f="value" value="${esc(s.value)}" spellcheck="false"></div>
+      <div class="rm"><button class="btn danger small" type="button" data-rm="${i}" aria-label="Remove ${esc(s.name)}">Remove</button></div>
+      <div class="explain-txt" style="grid-column:1/-1;margin-top:0"><b>${esc(t.label)}:</b> ${t.desc}</div>
+    </div>`;
+  }).join('') || '<p class="note">No tiers yet. Add one to start carving up the VPC.</p>';
+  document.querySelectorAll('#aws-rows .srow').forEach(row => {
+    const s = aw.tiers[+row.dataset.i];
+    row.querySelector('[data-f="type"]').value = s.type;
+    row.querySelector('[data-f="mode"]').value = s.mode;
+  });
+}
+$('#aws-rows').addEventListener('input', e => {
+  const row = e.target.closest('.srow'); if (!row) return;
+  const s = aw.tiers[+row.dataset.i], f = e.target.dataset.f;
+  if (f === 'name' || f === 'value'){ s[f] = e.target.value; awsPlan(); }
+});
+$('#aws-rows').addEventListener('change', e => {
+  const row = e.target.closest('.srow'); if (!row) return;
+  const s = aw.tiers[+row.dataset.i], f = e.target.dataset.f;
+  if (f === 'type'){
+    s.type = e.target.value; const T = AWS_TYPES[s.type], sz = T.rec || T.min;
+    if (sz){ s.mode = 'prefix'; s.value = String(sz); }
+    awsRenderRows(); awsPlan();
+  } else if (f === 'mode'){
+    s.mode = e.target.value; s.value = s.mode === 'hosts' ? '100' : '24';
+    awsRenderRows(); awsPlan();
+  }
+});
+$('#aws-rows').addEventListener('click', e => {
+  const b = e.target.closest('[data-rm]'); if (!b) return;
+  aw.tiers.splice(+b.dataset.rm, 1); awsRenderRows(); awsPlan();
+});
+$('#aws-add').addEventListener('click', () => {
+  aw.tiers.push({ name:'tier' + (aw.tiers.length + 1), type:'private', mode:'hosts', value:'100' });
+  awsRenderRows(); awsPlan();
+  const ins = document.querySelectorAll('#aws-rows [data-f="name"]'); ins[ins.length - 1]?.focus();
+});
+
+function packBlocks(v, list){
+  const alloc = [];
+  const sorted = [...list].sort((a, b) => b.size - a.size || a.ti - b.ti || a.ai - b.ai);
+  for (const it of sorted){
+    alloc.sort((a, b) => a.start - b.start);
+    let cur = v.net; const gaps = [];
+    for (const a of alloc){ if (a.start > cur) gaps.push([cur, a.start - 1]); cur = Math.max(cur, a.end + 1); }
+    if (cur <= v.bc) gaps.push([cur, v.bc]);
+    let placed = false;
+    for (const [gs, ge] of gaps){
+      const s0 = Math.ceil(gs / it.size) * it.size;
+      if (s0 + it.size - 1 <= ge){ alloc.push({ start: s0, end: s0 + it.size - 1 }); it.net = s0; placed = true; break; }
+    }
+    if (!placed){ it.notes.push(['err', `No room left for a /${it.p}`]); it.bad = true; }
+  }
+  alloc.sort((a, b) => a.start - b.start);
+  const free = []; let cur = v.net;
+  for (const a of alloc){ if (a.start > cur) free.push(...rangeToCidrs(cur, a.start - 1)); cur = Math.max(cur, a.end + 1); }
+  if (cur <= v.bc) free.push(...rangeToCidrs(cur, v.bc));
+  return free;
+}
+
+function awsPlan(){
+  awsSave();
+  const errors = [], warns = [], items = [];
+  let v;
+  try {
+    const r = parseCidr(aw.cidr); v = block(r.ip, r.p);
+    if (v.net !== r.ip) warns.push(`${aw.cidr.trim()} is not a network boundary — using ${cidrStr(v.net, v.p)}.`);
+    if (v.p < 16 || v.p > 28) errors.push('An AWS VPC CIDR block must be between /16 (65,536 addresses) and /28 (16 addresses). For more space, add secondary CIDR blocks to the VPC later.');
+    const t = ipType(v.net);
+    if (!t.startsWith('Private') && !t.startsWith('Shared')) warns.push(`${cidrStr(v.net, v.p)} is ${t.toLowerCase()} space. AWS allows it, but your resources will not be able to reach the real owners of those addresses on the internet. Use RFC 1918 ranges unless you own this block.`);
+    const dk = block(ipToInt('172.17.0.0'), 16);
+    if (dk.net <= v.bc && v.net <= dk.bc) warns.push('This range overlaps 172.17.0.0/16, which Docker and some AWS services use internally. AWS advises avoiding it.');
+  } catch(e){ errors.push('VPC CIDR: ' + e.message); }
+  if (!v) return awsRender({ v:null, items, errors, warns, free:[], n:0 });
+
+  const n = Math.max(1, Math.min(6, +aw.azs || 1));
+  const region = (aw.region || '').trim() || 'region';
+  const azs = AZ_LETTERS.slice(0, n).split('').map(l => region + l);
+  if (n < 2) warns.push('With a single Availability Zone, an outage in that zone takes everything down. Production VPCs normally use 2 or 3 zones.');
+  const names = {};
+  aw.tiers.forEach((s, ti) => {
+    const T = AWS_TYPES[s.type] || AWS_TYPES.private;
+    const notes = []; let p, bad = false, hosts, rawP;
+    const nm = (s.name || '').trim();
+    if (!nm) notes.push(['err', 'Name required']);
+    else if (names[nm.toLowerCase()]) notes.push(['err', 'Duplicate tier name']);
+    names[nm.toLowerCase()] = 1;
+    try {
+      const val = String(s.value).trim();
+      if (s.mode === 'hosts'){
+        if (!/^\d+$/.test(val) || +val < 1) throw new Error('Enter a host count');
+        hosts = +val; rawP = 32 - Math.ceil(Math.log2(hosts + 5)); p = Math.min(28, rawP);
+      } else {
+        const pv = val.replace(/^\//, '');
+        if (!/^\d{1,2}$/.test(pv) || +pv > 32) throw new Error('Enter a prefix like 24');
+        p = +pv;
+      }
+      if (p > 28) throw new Error('AWS subnets must be /28 or larger');
+      if (p < v.p) throw new Error(`Bigger than the VPC (/${v.p})`);
+      if (T.min && p > T.min) notes.push(['err', `Needs /${T.min} or larger`]);
+      else if (T.rec && p > T.rec) notes.push(['warn', `/${T.rec} or larger recommended`]);
+      if (T.minAz && n < T.minAz) notes.push(['warn', `Needs at least ${T.minAz} zones`]);
+    } catch(e){ notes.push(['err', e.message]); bad = true; }
+    azs.forEach((az, ai) => items.push({ ti, ai, az, s, T, p, hosts, rawP, bad, size: bad ? 0 : 2 ** (32 - p), notes: notes.map(x => x.slice()), sname: `${nm || 'tier'}-${az}` }));
+  });
+  const free = packBlocks(v, items.filter(i => !i.bad));
+  awsRender({ v, items, errors, warns, free, n });
+}
+
+function awsExplain(r, n){
+  const parts = [], sz = r.size, p = r.p, a = r.net, bc = a + sz - 1;
+  if (n > 1) parts.push(`This is the ${esc(r.s.name)} tier's subnet in zone ${r.az}. An AWS subnet lives in exactly one Availability Zone, so the tier is repeated in each of your ${n} zones at the same size.`);
+  if (r.s.mode === 'hosts'){
+    const need = r.hosts + 5;
+    if (r.rawP > 28) parts.push(`You need ${fmt(r.hosts)} address${r.hosts > 1 ? 'es' : ''} per zone. Adding AWS's 5 reserved makes ${fmt(need)}, but the smallest AWS subnet is a /28 (16 addresses), so it gets a /28 with 11 usable.`);
+    else parts.push(`You need ${fmt(r.hosts)} addresses per zone. Adding AWS's 5 reserved makes ${fmt(need)}. Sizes only come in powers of two and ${fmt(sz / 2)} is too small, so it gets ${fmt(sz)} addresses, a /${p}, leaving ${fmt(sz - 5 - r.hosts)} spare.`);
+  } else parts.push(`You chose /${p}: 2<sup>${32 - p}</sup> = ${fmt(sz)} addresses, ${fmt(sz - 5)} usable after AWS's 5.`);
+  parts.push(`It sits at the first free spot that starts on a multiple of ${fmt(sz)}, because every subnet has to line up with its own size.`);
+  parts.push(`AWS keeps ${intToIp(a)} (network address), ${intToIp(a + 1)} (VPC router), ${intToIp(a + 2)} (Amazon DNS), ${intToIp(a + 3)} (held for future use) and ${intToIp(bc)} (the last address; VPCs have no broadcast, but AWS still holds it). Your resources get ${intToIp(a + 4)} to ${intToIp(bc - 1)}.`);
+  if (r.T.public) parts.push('Because it is a public subnet, the deployment code routes it to an Internet Gateway and gives instances launched in it a public IP automatically.');
+  if (r.T.min && p > r.T.min) parts.push(`AWS needs at least /${r.T.min} for this purpose.`);
+  else if (r.T.rec && p > r.T.rec) parts.push(`AWS guidance is /${r.T.rec} (${fmt(2 ** (32 - r.T.rec))} addresses) for this purpose.`);
+  if (r.T.minAz && n < r.T.minAz) parts.push(`This service requires subnets in at least ${r.T.minAz} Availability Zones; raise the zone count above.`);
+  return parts.join(' ');
+}
+function awsExplainBad(r){
+  const t = r.notes.map(x => x[1]).join(' ');
+  if (/No room/.test(t)) return 'There is no free, correctly aligned block this big left in the VPC. Use a bigger VPC block, fewer zones, or smaller tiers.';
+  if (/28 or larger/.test(t)) return 'AWS does not allow subnets smaller than /28 (16 addresses, 11 usable).';
+  if (/Bigger than/.test(t)) return 'A subnet cannot be bigger than the VPC that contains it. Use a longer prefix (a bigger number after the slash) or fewer hosts.';
+  if (/Name|Duplicate/.test(t)) return 'Every tier needs its own unique name, because subnet names are built from it.';
+  return 'Fix the value in the Subnet tiers section to place this subnet.';
+}
+
+function awsRender(P){
+  awsLast = P;
+  const { v, items, errors, warns, free, n } = P;
+  $('#aws-msgs').innerHTML = [...errors.map(m => ['err', m]), ...warns.map(m => ['warn', m])].map(([c, m]) => `<li class="${c}">${esc(m)}</li>`).join('');
+  if (!v){ ['#aws-stats','#aws-map','#aws-scale','#aws-table','#aws-free'].forEach(s => $(s).innerHTML = ''); awsRenderCode(); return; }
+  const placed = items.filter(r => !r.bad && r.net !== undefined);
+  const used = placed.reduce((a, r) => a + r.size, 0), usable = placed.reduce((a, r) => a + r.size - 5, 0);
+  $('#aws-stats').innerHTML = [
+    [cidrStr(v.net, v.p), 'VPC CIDR'], [fmt(placed.length), 'Subnets'], [fmt(v.size), 'Total addresses'],
+    [fmt(used), 'Allocated to subnets'], [fmt(usable), 'Usable by resources'], [fmt(v.size - used), 'Unallocated'], [(used / v.size * 100).toFixed(1) + '%', 'Allocated'],
+  ].map(([x, l]) => `<div class="stat"><div class="n">${x}</div><div class="l">${l}</div></div>`).join('');
+  $('#aws-map').innerHTML = placed.map(r => {
+    const left = (r.net - v.net) / v.size * 100, w = r.size / v.size * 100, col = COLORS[r.ti % COLORS.length];
+    return `<div class="seg" style="left:${left}%;width:${w}%;background:${col}" title="${esc(r.sname)} — ${cidrStr(r.net, r.p)}">${w > 7 ? esc(r.sname) : ''}</div>`;
+  }).join('');
+  $('#aws-scale').innerHTML = `<span>${intToIp(v.net)}</span><span>${intToIp(v.net + v.size / 2)}</span><span>${intToIp(v.bc)}</span>`;
+
+  const sorted = [...items].sort((a, b) => (a.net ?? Infinity) - (b.net ?? Infinity) || a.ti - b.ti || a.ai - b.ai);
+  let h = '<tr><th></th><th>Subnet</th><th>Zone</th><th>CIDR</th><th>Usable range</th><th>Usable IPs</th><th>AWS reserved</th><th>Notes</th></tr>';
+  for (const r of sorted){
+    const col = COLORS[r.ti % COLORS.length];
+    const tags = r.notes.map(([c, m]) => `<span class="tag ${c}">${esc(m)}</span>`).join('');
+    if (r.bad || r.net === undefined){
+      h += `<tr><td><span class="sw" style="background:${col};opacity:.35"></span></td><td>${esc(r.sname)}</td><td class="m">${esc(r.az)}</td><td class="m">—</td><td class="m">—</td><td class="m">—</td><td>—</td><td>${tags}</td></tr><tr class="explain-row"><td colspan="8">${awsExplainBad(r)}</td></tr>`;
+      continue;
+    }
+    const a = r.net, bc = a + r.size - 1;
+    const resv = `${intToIp(a)} network\n${intToIp(a + 1)} VPC router\n${intToIp(a + 2)} Amazon DNS\n${intToIp(a + 3)} future use\n${intToIp(bc)} last address`;
+    const notes = tags || (r.T.public ? '<span class="tag info">Public</span>' : '<span class="tag ok">OK</span>');
+    h += `<tr><td><span class="sw" style="background:${col}"></span></td><td>${esc(r.sname)}<div class="hint" style="margin:0">${esc(r.T.label)}</div></td><td class="m">${esc(r.az)}</td>
+      <td class="m">${cidrStr(a, r.p)}</td><td class="m">${intToIp(a + 4)} – ${intToIp(bc - 1)}</td><td class="m">${fmt(r.size - 5)}</td>
+      <td class="m" title="${esc(resv)}" style="cursor:help">.${a & 255}–.${(a + 3) & 255}, .${bc & 255}</td><td>${notes}</td></tr><tr class="explain-row"><td colspan="8">${awsExplain(r, n)}</td></tr>`;
+  }
+  $('#aws-table').innerHTML = items.length ? h : '<tr><td>No tiers yet.</td></tr>';
+  $('#aws-free').innerHTML = free.length ? free.map(f => `<span>${cidrStr(f.net, f.p)}</span>`).join('') : '<span class="hint" style="margin:0;border:0;background:none">None — the VPC range is fully allocated.</span>';
+  awsRenderCode();
+}
+
+function awsRenderCode(){
+  const P = awsLast, v = P && P.v;
+  const ok = v ? P.items.filter(r => !r.bad && r.net !== undefined).sort((a, b) => a.ti - b.ti || a.ai - b.ai) : [];
+  const cidr = v ? cidrStr(v.net, v.p) : aw.cidr;
+  const region = (aw.region || '').trim() || 'region';
+  const tag = s => String(s).replace(/[^\w.-]/g, '-');
+  const tfId = s => { const x = String(s).replace(/[^A-Za-z0-9_]/g, '_'); return /^[0-9]/.test(x) ? 's_' + x : x; };
+  const cfId = s => 'Subnet' + String(s).replace(/[^A-Za-z0-9]/g, '').replace(/^./, c => c.toUpperCase());
+  const pubs = ok.filter(r => r.T.public);
+  const vname = tag(aw.name || 'vpc');
+  let out = '';
+  if (awsCodeKind === 'cli'){
+    out = `# Create the VPC\nVPC_ID=$(aws ec2 create-vpc --region ${region} --cidr-block ${cidr} \\\n  --tag-specifications 'ResourceType=vpc,Tags=[{Key=Name,Value=${vname}}]' \\\n  --query Vpc.VpcId --output text)\naws ec2 modify-vpc-attribute --region ${region} --vpc-id $VPC_ID --enable-dns-hostnames\n`;
+    ok.forEach((r, i) => {
+      r._v = 'SUBNET_' + (i + 1);
+      out += `\n# ${tag(r.sname)}\n${r._v}=$(aws ec2 create-subnet --region ${region} --vpc-id $VPC_ID \\\n  --cidr-block ${cidrStr(r.net, r.p)} --availability-zone ${r.az} \\\n  --tag-specifications 'ResourceType=subnet,Tags=[{Key=Name,Value=${tag(r.sname)}}]' \\\n  --query Subnet.SubnetId --output text)\n`;
+    });
+    if (pubs.length){
+      out += `\n# Internet access for the public subnets\nIGW_ID=$(aws ec2 create-internet-gateway --region ${region} --query InternetGateway.InternetGatewayId --output text)\naws ec2 attach-internet-gateway --region ${region} --vpc-id $VPC_ID --internet-gateway-id $IGW_ID\nRTB_ID=$(aws ec2 create-route-table --region ${region} --vpc-id $VPC_ID --query RouteTable.RouteTableId --output text)\naws ec2 create-route --region ${region} --route-table-id $RTB_ID --destination-cidr-block 0.0.0.0/0 --gateway-id $IGW_ID\n`;
+      pubs.forEach(r => { out += `aws ec2 associate-route-table --region ${region} --route-table-id $RTB_ID --subnet-id $${r._v}\naws ec2 modify-subnet-attribute --region ${region} --subnet-id $${r._v} --map-public-ip-on-launch\n`; });
+    }
+  } else if (awsCodeKind === 'tf'){
+    out = `provider "aws" {\n  region = "${region}"\n}\n\nresource "aws_vpc" "main" {\n  cidr_block           = "${cidr}"\n  enable_dns_support   = true\n  enable_dns_hostnames = true\n  tags = {\n    Name = "${vname}"\n  }\n}\n`;
+    ok.forEach(r => {
+      out += `\nresource "aws_subnet" "${tfId(r.sname)}" {\n  vpc_id            = aws_vpc.main.id\n  cidr_block        = "${cidrStr(r.net, r.p)}"\n  availability_zone = "${r.az}"\n${r.T.public ? '  map_public_ip_on_launch = true\n' : ''}  tags = {\n    Name = "${tag(r.sname)}"\n  }\n}\n`;
+    });
+    if (pubs.length){
+      out += `\nresource "aws_internet_gateway" "main" {\n  vpc_id = aws_vpc.main.id\n}\n\nresource "aws_route_table" "public" {\n  vpc_id = aws_vpc.main.id\n  route {\n    cidr_block = "0.0.0.0/0"\n    gateway_id = aws_internet_gateway.main.id\n  }\n}\n`;
+      pubs.forEach(r => { out += `\nresource "aws_route_table_association" "${tfId(r.sname)}" {\n  subnet_id      = aws_subnet.${tfId(r.sname)}.id\n  route_table_id = aws_route_table.public.id\n}\n`; });
+    }
+  } else if (awsCodeKind === 'cfn'){
+    out = `AWSTemplateFormatVersion: '2010-09-09'\nDescription: VPC ${vname}\nResources:\n  VPC:\n    Type: AWS::EC2::VPC\n    Properties:\n      CidrBlock: ${cidr}\n      EnableDnsSupport: true\n      EnableDnsHostnames: true\n      Tags:\n        - Key: Name\n          Value: ${vname}\n`;
+    ok.forEach(r => {
+      out += `  ${cfId(r.sname)}:\n    Type: AWS::EC2::Subnet\n    Properties:\n      VpcId: !Ref VPC\n      CidrBlock: ${cidrStr(r.net, r.p)}\n      AvailabilityZone: ${r.az}\n${r.T.public ? '      MapPublicIpOnLaunch: true\n' : ''}      Tags:\n        - Key: Name\n          Value: ${tag(r.sname)}\n`;
+    });
+    if (pubs.length){
+      out += `  InternetGateway:\n    Type: AWS::EC2::InternetGateway\n  GatewayAttachment:\n    Type: AWS::EC2::VPCGatewayAttachment\n    Properties:\n      VpcId: !Ref VPC\n      InternetGatewayId: !Ref InternetGateway\n  PublicRouteTable:\n    Type: AWS::EC2::RouteTable\n    Properties:\n      VpcId: !Ref VPC\n  PublicDefaultRoute:\n    Type: AWS::EC2::Route\n    DependsOn: GatewayAttachment\n    Properties:\n      RouteTableId: !Ref PublicRouteTable\n      DestinationCidrBlock: 0.0.0.0/0\n      GatewayId: !Ref InternetGateway\n`;
+      pubs.forEach(r => { out += `  ${cfId(r.sname)}RouteTable:\n    Type: AWS::EC2::SubnetRouteTableAssociation\n    Properties:\n      SubnetId: !Ref ${cfId(r.sname)}\n      RouteTableId: !Ref PublicRouteTable\n`; });
+    }
+  } else {
+    out = 'vpc,subnet,tier,purpose,zone,cidr,first_usable,last_usable,usable_ips,public\n';
+    out += ok.map(r => [aw.name, r.sname, r.s.name, r.T.label, r.az, cidrStr(r.net, r.p), intToIp(r.net + 4), intToIp(r.net + r.size - 2), r.size - 5, r.T.public ? 'yes' : 'no']
+      .map(x => /[",]/.test(String(x)) ? '"' + String(x).replace(/"/g, '""') + '"' : x).join(',')).join('\n') + '\n';
+  }
+  const skipped = P ? P.items.length - ok.length : 0;
+  if (skipped > 0 && awsCodeKind !== 'csv') out = `# ${skipped} subnet(s) left out because of errors above\n` + out;
+  const EXPL = {
+    cli: 'Commands for the AWS CLI. Run them in <b>AWS CloudShell</b> (the terminal icon in the AWS console) or in a terminal after <code>aws configure</code>. Each new ID is saved in a shell variable, so paste everything into the same session, in order.',
+    tf: 'Terraform describes the network as code and builds it for you. Save this as <code>main.tf</code>, then run <code>terraform init</code>, <code>terraform plan</code> to preview the changes, and <code>terraform apply</code> to create them.',
+    cfn: 'CloudFormation is AWS\u2019s own infrastructure-as-code service. Save this as <code>vpc.yaml</code> and create a stack from it in the CloudFormation console, or run <code>aws cloudformation deploy --template-file vpc.yaml --stack-name my-vpc</code>.',
+    csv: 'A plain list you can open in Excel or paste into documentation, so your team knows which ranges are taken.'
+  };
+  $('#aws-code-explain').innerHTML = EXPL[awsCodeKind];
+  $('#aws-code').textContent = out;
+}
+$('#aws-code-tabs').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  awsCodeKind = b.dataset.code;
+  document.querySelectorAll('#aws-code-tabs button').forEach(x => x.setAttribute('aria-pressed', x === b));
+  awsRenderCode();
+});
+$('#aws-copy').addEventListener('click', async () => {
+  const txt = $('#aws-code').textContent;
+  try { await navigator.clipboard.writeText(txt); $('#aws-copy-msg').textContent = 'Copied'; }
+  catch(e){
+    const r = document.createRange(); r.selectNodeContents($('#aws-code'));
+    const s = getSelection(); s.removeAllRanges(); s.addRange(r);
+    $('#aws-copy-msg').textContent = 'Selected — press Ctrl+C / ⌘C to copy';
+  }
+  setTimeout(() => $('#aws-copy-msg').textContent = '', 2500);
+});
+
+/* ---------- IPv6 ---------- */
+const V6MAX = (1n << 128n) - 1n;
+const fmtB = n => n.toLocaleString('en-US');
+function mask6(p){ return p === 0 ? 0n : (V6MAX >> BigInt(128 - p)) << BigInt(128 - p); }
+function parseV6(str){
+  const m = String(str).trim().match(/^([0-9a-fA-F:.]+)(?:\/(\d{1,3}))?$/);
+  if (!m) throw new Error('Enter an IPv6 address like 2001:db8::1/64');
+  let s = m[1];
+  if (m[2] === undefined) throw new Error('Add a prefix length such as /64');
+  const p = +m[2]; if (p > 128) throw new Error('Prefix must be between 0 and 128');
+  if (s.includes('.')){
+    const i = s.lastIndexOf(':'); const v4 = ipToInt(s.slice(i + 1));
+    if (v4 === null) throw new Error('The IPv4 part at the end is not valid');
+    s = s.slice(0, i + 1) + (v4 >>> 16).toString(16) + ':' + (v4 & 0xffff).toString(16);
+  }
+  const dbl = s.split('::');
+  if (dbl.length > 2) throw new Error('"::" can appear only once in an address');
+  const head = dbl[0] ? dbl[0].split(':') : [];
+  const tail = dbl.length === 2 && dbl[1] ? dbl[1].split(':') : [];
+  let groups;
+  if (dbl.length === 2){
+    const fill = 8 - head.length - tail.length;
+    if (fill < 1) throw new Error('Too many groups for an address that uses "::"');
+    groups = [...head, ...Array(fill).fill('0'), ...tail];
+  } else {
+    groups = head;
+    if (groups.length !== 8) throw new Error('An IPv6 address needs 8 groups, or "::" to stand for the missing zero groups');
+  }
+  let n = 0n;
+  for (const g of groups){
+    if (!/^[0-9a-fA-F]{1,4}$/.test(g)) throw new Error(`"${g || '(empty)'}" is not a valid group (1 to 4 hex digits)`);
+    n = (n << 16n) | BigInt(parseInt(g, 16));
+  }
+  return { ip: n, p };
+}
+function v6Groups(n){ const g = []; for (let i = 7; i >= 0; i--) g.push(Number((n >> BigInt(i * 16)) & 0xffffn)); return g; }
+function fullV6(n){ return v6Groups(n).map(x => x.toString(16).padStart(4, '0')).join(':'); }
+function compressV6(n){
+  const g = v6Groups(n); let bs = -1, bl = 0;
+  for (let i = 0; i < 8;){
+    if (g[i] === 0){ let j = i; while (j < 8 && g[j] === 0) j++; if (j - i > bl && j - i >= 2){ bs = i; bl = j - i; } i = j; }
+    else i++;
+  }
+  const h = g.map(x => x.toString(16));
+  if (bs < 0) return h.join(':');
+  return h.slice(0, bs).join(':') + '::' + h.slice(bs + bl).join(':');
+}
+const V6TYPES = [
+  ['::1/128', 'Loopback', 'Means this device itself, like 127.0.0.1 in IPv4.'],
+  ['::/128', 'Unspecified', 'The all-zero address, used only before a device has an address of its own.'],
+  ['::ffff:0:0/96', 'IPv4-mapped', 'An IPv4 address written in IPv6 form, used inside dual-stack software.'],
+  ['2001:db8::/32', 'Documentation', 'Reserved for examples in books and documentation; never used on real networks.'],
+  ['2001::/32', 'Teredo tunnelling', 'An old technique for carrying IPv6 across IPv4-only networks.'],
+  ['2002::/16', '6to4', 'An old transition mechanism that embeds an IPv4 address.'],
+  ['fc00::/7', 'Unique local (ULA)', 'The IPv6 version of private ranges like 10.0.0.0/8: usable inside your own networks but not routed on the internet. In practice these start with fd.'],
+  ['fe80::/10', 'Link-local', 'Every IPv6 interface gives itself one automatically. Only valid on the local network segment and never routed.'],
+  ['ff00::/8', 'Multicast', 'Sends to a group of listeners. IPv6 uses multicast where IPv4 used broadcast.'],
+  ['2000::/3', 'Global unicast', 'Public, internet-routable addresses: the IPv6 version of public IPv4.'],
+].map(([c, n, d]) => { const r = parseV6(c); return { net: r.ip, m: mask6(r.p), n, d }; });
+function v6Type(ip){ for (const t of V6TYPES) if ((ip & t.m) === t.net) return [t.n, t.d]; return ['Reserved', 'Set aside by the IETF and not used for normal addressing.']; }
+
+let v6b = null;
+function renderV6(){
+  const errEl = $('#v6-err'); let r;
+  try { r = parseV6($('#v6-in').value); errEl.innerHTML = ''; }
+  catch(e){ errEl.innerHTML = `<div class="err">${esc(e.message)}</div>`; return; }
+  try { localStorage.setItem('snc.v6', $('#v6-in').value); } catch(e){}
+  const p = r.p, hb = 128 - p, net = r.ip & mask6(p), size = 1n << BigInt(hb), last = net + size - 1n;
+  v6b = { net, p, size };
+  const t = v6Type(r.ip);
+  const nib = Math.floor(p / 4);
+  const rev = (nib ? fullV6(net).replace(/:/g, '').slice(0, nib).split('').reverse().join('.') + '.' : '') + 'ip6.arpa';
+  const cells = [
+    ['Network', compressV6(net) + '/' + p, `Your address with all ${hb} host bits set to 0. It names the subnet.`],
+    ['Address (short form)', compressV6(r.ip), 'The standard way to write it: leading zeros dropped and the longest run of zero groups replaced by ::.'],
+    ['Address (full form)', fullV6(r.ip), 'All 8 groups written out with 4 digits each. Handy for sorting and comparing addresses by eye.'],
+    ['First address', compressV6(net), 'IPv6 has no broadcast address, so the range runs from all host bits 0 to all host bits 1.'],
+    ['Last address', compressV6(last), 'The top of the range: all host bits set to 1.'],
+    ['Total addresses', `2^${hb} = ${fmtB(size)}`, `2 to the power of the ${hb} host bits.${hb >= 64 ? ' This is so large you never run out; IPv6 subnets are sized by structure, not by host count.' : ''}`],
+    ['/64 subnets inside', p <= 64 ? fmtB(1n << BigInt(64 - p)) : 'smaller than a /64', p <= 64 ? 'How many standard /64 subnets fit in this block.' : 'Prefixes longer than /64 break automatic addressing (SLAAC). They are used for router-to-router links (/127) and single addresses (/128).'],
+    ['Address type', t[0], t[1]],
+    ['Reverse DNS zone', rev, p % 4 === 0 ? 'The DNS zone holding PTR records, which turn addresses back into names. IPv6 reverse zones are split per hex digit (4 bits).' : `IPv6 reverse zones are split per hex digit (4 bits). /${p} is not on a digit boundary, so this is the zone for the enclosing /${nib * 4}.`],
+  ];
+  $('#v6-out').innerHTML = `<div class="grid-out">${cells.map(([k, v, d]) => `<div class="cell"><div class="k">${k}</div><div class="v">${esc(v)}</div><div class="explain-txt">${esc(d)}</div></div>`).join('')}</div>`;
+  const hex = fullV6(r.ip).replace(/:/g, '');
+  let h = '<div class="bitlabel">Each box is one hex digit (4 bits)</div><div class="bits">';
+  for (let g = 0; g < 8; g++){
+    h += '<div class="oct">';
+    for (let k = 0; k < 4; k++){ const i = g * 4 + k; const cls = i * 4 + 4 <= p ? 'n' : i * 4 >= p ? 'h' : 'p'; h += `<span class="bit ${cls}">${hex[i]}</span>`; }
+    h += '</div>';
+  }
+  h += `</div><div class="legend"><span><span class="sw" style="background:var(--accent)"></span>network part (${p} bits)</span>${p % 4 ? '<span><span class="sw" style="background:var(--accent-soft);border:1px dashed var(--accent)"></span>digit split between network and host</span>' : ''}<span><span class="sw" style="background:var(--panel2);border:1px solid var(--line)"></span>host part (${hb} bits)</span></div>
+    <div class="explain-txt" style="max-width:80ch">The blue digits are identical for every address in this block. The grey digits are free to change. Because each hex digit is exactly 4 bits, prefixes that are multiples of 4 (/48, /52, /56, /64) always end on a whole digit, which makes them much easier to read.</div>`;
+  $('#v6-ruler').innerHTML = h;
+
+  const sel = $('#v6-split'), prev = +sel.value, maxP = Math.min(128, p + 16);
+  sel.innerHTML = '';
+  for (let q = p + 1; q <= maxP; q++){ const o = document.createElement('option'); o.value = q; o.textContent = `/${q}  —  ${fmtB(1n << BigInt(q - p))} prefixes`; sel.appendChild(o); }
+  if (!sel.options.length){ $('#v6-split-sum').textContent = 'A /128 cannot be split.'; $('#v6-split-table').innerHTML = ''; $('#v6-split-explain').innerHTML = ''; $('#v6-split-more').textContent = ''; return; }
+  let def = p < 64 ? Math.min(64, (Math.floor(p / 4) + 1) * 4) : p + 1;
+  sel.value = (prev > p && prev <= maxP) ? prev : def;
+  renderV6Split();
+}
+function renderV6Split(){
+  const b = v6b; if (!b) return;
+  const q = +$('#v6-split').value, sz = 1n << BigInt(128 - q), count = 1n << BigInt(q - b.p), shown = count < 256n ? Number(count) : 256;
+  $('#v6-split-sum').innerHTML = `<b>${fmtB(count)}</b> prefixes of /${q}`;
+  $('#v6-split-explain').innerHTML = `Going from /${b.p} to /${q} moves ${q - b.p} bit${q - b.p > 1 ? 's' : ''} into the network part, giving 2<sup>${q - b.p}</sup> = ${fmtB(count)} pieces.${(q - b.p) % 4 === 0 ? ` That is exactly ${(q - b.p) / 4} hex digit${q - b.p > 4 ? 's' : ''}, so each piece differs from the next in a whole digit.` : ' This is not a whole number of hex digits, so the pieces will be harder to tell apart by eye; steps of 4 bits are usually preferred.'}`;
+  let h = '<tr><th>#</th><th>Prefix</th><th>Last address</th></tr>';
+  for (let i = 0; i < shown; i++){ const n = b.net + BigInt(i) * sz; h += `<tr><td>${i + 1}</td><td class="m">${compressV6(n)}/${q}</td><td class="m">${compressV6(n + sz - 1n)}</td></tr>`; }
+  $('#v6-split-table').innerHTML = h;
+  $('#v6-split-more').textContent = count > BigInt(shown) ? `Showing the first ${shown} of ${fmtB(count)}.` : '';
+}
+$('#v6-in').addEventListener('input', renderV6);
+$('#v6-split').addEventListener('change', renderV6Split);
+try { const s = localStorage.getItem('snc.v6'); if (s) $('#v6-in').value = s; } catch(e){}
+
+/* ---------- shared helpers ---------- */
+function parseAny(s){
+  s = String(s).trim();
+  if (s.includes(':')){
+    const r = parseV6(s.includes('/') ? s : s + '/128');
+    const net = r.ip & mask6(r.p);
+    return { v:6, bits:128, ip:r.ip, p:r.p, start:net, end:net + (1n << BigInt(128 - r.p)) - 1n };
+  }
+  let r;
+  if (/[\/\s]/.test(s)) r = parseCidr(s);
+  else { const ip = ipToInt(s); if (ip === null) throw new Error(`"${s}" is not a valid address`); r = { ip, p:32 }; }
+  const b = block(r.ip, r.p);
+  return { v:4, bits:32, ip:BigInt(r.ip), p:r.p, start:BigInt(b.net), end:BigInt(b.bc) };
+}
+const addrStr = (n, v) => v === 4 ? intToIp(Number(n)) : compressV6(n);
+const cidrAny = (n, p, v) => addrStr(n, v) + '/' + p;
+function bigRangeToCidrs(start, end, bits){
+  const out = [];
+  while (start <= end){
+    let k = 0n;
+    while (k < BigInt(bits) && start % (1n << (k + 1n)) === 0n && start + (1n << (k + 1n)) - 1n <= end) k++;
+    out.push({ net:start, p:bits - Number(k) });
+    start += 1n << k;
+  }
+  return out;
+}
+function mergeRanges(list){
+  const s = [...list].sort((a, b) => a.start < b.start ? -1 : a.start > b.start ? 1 : 0), out = [];
+  for (const r of s){
+    const l = out[out.length - 1], one = typeof r.start === 'bigint' ? 1n : 1;
+    if (l && r.start <= l.end + one){ if (r.end > l.end) l.end = r.end; }
+    else out.push({ start:r.start, end:r.end });
+  }
+  return out;
+}
+function allocate(v, items){
+  const alloc = [];
+  for (const it of items.filter(i => !i.bad && i.fixed !== undefined)){
+    const s = { start:it.fixed, end:it.fixed + it.size - 1, label:it.label };
+    if (s.start < v.net || s.end > v.bc){ it.notes.push(['err', 'Outside the address space']); it.bad = true; continue; }
+    const c = alloc.find(a => a.start <= s.end && s.start <= a.end);
+    if (c){ it.notes.push(['err', `Overlaps ${c.label}`]); it.bad = true; continue; }
+    alloc.push(s); it.net = it.fixed;
+  }
+  const auto = items.filter(i => !i.bad && i.fixed === undefined).sort((a, b) => b.size - a.size || a.ti - b.ti || a.ai - b.ai);
+  for (const it of auto){
+    alloc.sort((a, b) => a.start - b.start);
+    let cur = v.net; const gaps = [];
+    for (const a of alloc){ if (a.start > cur) gaps.push([cur, a.start - 1]); cur = Math.max(cur, a.end + 1); }
+    if (cur <= v.bc) gaps.push([cur, v.bc]);
+    let placed = false;
+    for (const [gs, ge] of gaps){
+      const s0 = Math.ceil(gs / it.size) * it.size;
+      if (s0 + it.size - 1 <= ge){ alloc.push({ start:s0, end:s0 + it.size - 1, label:it.label }); it.net = s0; placed = true; break; }
+    }
+    if (!placed){ it.notes.push(['err', `No room left for a /${it.p}`]); it.bad = true; }
+  }
+  alloc.sort((a, b) => a.start - b.start);
+  const free = []; let cur = v.net;
+  for (const a of alloc){ if (a.start > cur) free.push(...rangeToCidrs(cur, a.start - 1)); cur = Math.max(cur, a.end + 1); }
+  if (cur <= v.bc) free.push(...rangeToCidrs(cur, v.bc));
+  return free;
+}
+function tabTo(name){ document.querySelector(`.tab[data-tab="${name}"]`)?.click(); window.scrollTo(0, 0); }
+document.addEventListener('click', async e => {
+  const b = e.target.closest('[data-copy]'); if (!b) return;
+  const id = b.dataset.copy, msg = document.querySelector(`[data-copy-msg="${id}"]`), pre = document.getElementById(id);
+  try { await navigator.clipboard.writeText(pre.textContent); msg.textContent = 'Copied'; }
+  catch(err){ const r = document.createRange(); r.selectNodeContents(pre); const s = getSelection(); s.removeAllRanges(); s.addRange(r); msg.textContent = 'Selected — press Ctrl+C / ⌘C to copy'; }
+  setTimeout(() => msg.textContent = '', 2500);
+});
+function knownRanges(){
+  const out = [], add = (name, cidr) => { if (!out.some(o => o.cidr === cidr && o.name === name)) out.push({ name, cidr }); };
+  if (typeof lastPlan !== 'undefined' && lastPlan && lastPlan.v){ add(st.name, cidrStr(lastPlan.v.net, lastPlan.v.p)); lastPlan.results.filter(r => !r.bad && r.net !== undefined).forEach(r => add(r.s.name, cidrStr(r.net, r.p))); }
+  if (typeof awsLast !== 'undefined' && awsLast && awsLast.v){ add(aw.name, cidrStr(awsLast.v.net, awsLast.v.p)); awsLast.items.filter(r => !r.bad && r.net !== undefined).forEach(r => add(r.sname, cidrStr(r.net, r.p))); }
+  if (typeof gcLast !== 'undefined' && gcLast && gcLast.v){ gcLast.items.filter(r => !r.bad && r.net !== undefined).forEach(r => add(r.label, cidrStr(r.net, r.p))); }
+  if (typeof orgLast !== 'undefined' && orgLast && orgLast.v){ orgLast.items.filter(r => !r.bad && r.net !== undefined).forEach(r => add(r.label, cidrStr(r.net, r.p))); }
+  return out;
+}
+
+/* ---------- tools: summarise ---------- */
+function renderSum(){
+  const raw = $('#sum-in').value;
+  try { localStorage.setItem('snc.sum', raw); } catch(e){}
+  const lines = raw.split('\n').map(x => x.trim()).filter(Boolean);
+  const bad = [], g = { 4:[], 6:[] };
+  lines.forEach((l, i) => { try { const x = parseAny(l); g[x.v].push(x); } catch(e){ bad.push(`Line ${i + 1}: ${e.message}`); } });
+  let h = bad.length ? `<ul class="msgs">${bad.map(m => `<li class="err">${esc(m)}</li>`).join('')}</ul>` : '';
+  for (const v of [4, 6]){
+    const arr = g[v]; if (!arr.length) continue;
+    const bits = v === 4 ? 32 : 128;
+    const merged = mergeRanges(arr.map(x => ({ start:x.start, end:x.end })));
+    const exact = merged.flatMap(m => bigRangeToCidrs(m.start, m.end, bits));
+    const covered = merged.reduce((a, m) => a + (m.end - m.start + 1n), 0n);
+    const lo = merged[0].start, hi = merged[merged.length - 1].end;
+    let x = lo ^ hi, bl = 0; while (x > 0n){ x >>= 1n; bl++; }
+    const sp = bits - bl, sm = bits === 32 ? BigInt(maskOf(sp)) : mask6(sp), snet = lo & sm, ssize = 1n << BigInt(bits - sp), extra = ssize - covered;
+    h += `<div class="sumgroup"><h3>IPv${v}: ${arr.length} range${arr.length > 1 ? 's' : ''} in, ${fmtB(covered)} addresses covered</h3>
+      <div class="hint" style="margin:0">Exact summary: ${exact.length} block${exact.length > 1 ? 's' : ''}</div>
+      <div class="free">${exact.map(c => `<span>${cidrAny(c.net, c.p, v)}</span>`).join('')}</div>
+      <div class="explain-txt">These blocks cover exactly the same addresses as your list: duplicates and overlaps removed, and neighbouring blocks that line up merged into bigger ones. Use this when a route or firewall rule must not include anything extra.</div>
+      <div class="hint" style="margin:14px 0 0">Single covering block</div>
+      <div class="free"><span>${cidrAny(snet, sp, v)}</span></div>
+      <div class="hint">${extra === 0n ? 'Exact match: it covers your ranges and nothing else.' : `Also covers ${fmtB(extra)} address${extra === 1n ? '' : 'es'} that are not in your list.`}</div>
+      <div class="explain-txt">The smallest single block containing everything, found by keeping only the leading bits all your addresses share (${sp} of them here). It is one route instead of ${exact.length}, but anything else inside it would be sent the same way, so only use it when those extra addresses are unused or belong to the same place.</div></div>`;
+  }
+  if (!lines.length) h += '<p class="note">Paste some ranges to summarise.</p>';
+  $('#sum-out').innerHTML = h;
+}
+$('#sum-in').addEventListener('input', renderSum);
+
+/* ---------- tools: address in range ---------- */
+function parseRangeLines(text){
+  const out = [], bad = [];
+  text.split('\n').forEach((l, i) => {
+    l = l.trim(); if (!l) return;
+    const parts = l.split(/\s+/), c = parts.pop(), name = parts.join(' ');
+    try { const x = parseAny(c); out.push({ ...x, name, cidr:cidrAny(x.start, x.p, x.v) }); }
+    catch(e){ bad.push(`Range line ${i + 1}: ${e.message}`); }
+  });
+  return { out, bad };
+}
+function renderIR(){
+  try { localStorage.setItem('snc.ir', JSON.stringify({ ips:$('#ir-ips').value, ranges:$('#ir-ranges').value })); } catch(e){}
+  const R = parseRangeLines($('#ir-ranges').value), bad = [...R.bad], rows = [];
+  $('#ir-ips').value.split('\n').forEach((l, i) => {
+    l = l.trim(); if (!l) return;
+    try { rows.push({ text:l, x:parseAny(l) }); } catch(e){ bad.push(`Address line ${i + 1}: ${e.message}`); }
+  });
+  $('#ir-msgs').innerHTML = bad.length ? `<ul class="msgs">${bad.map(m => `<li class="err">${esc(m)}</li>`).join('')}</ul>` : '';
+  const lbl = r => r.name ? `${esc(r.name)} (${r.cidr})` : r.cidr;
+  let h = '<tr><th>Address</th><th>Best match</th><th>All matching ranges</th></tr>';
+  for (const { text, x } of rows){
+    const m = R.out.filter(r => r.v === x.v && r.start <= x.start && x.end <= r.end).sort((a, b) => b.p - a.p);
+    const best = m[0];
+    let exp;
+    if (!m.length) exp = 'Not inside any of the ranges listed. A router would send it to its default route, usually towards the internet or your main network link.';
+    else if (m.length === 1) exp = `Only inside ${lbl(best)}, so that is where it belongs.`;
+    else exp = `Inside ${m.length} ranges. When ranges overlap, routers and firewalls pick the most specific one, the one with the longest prefix (/${best.p} here), so traffic to this address follows ${lbl(best)}.`;
+    h += `<tr><td class="m">${esc(text)}</td><td>${best ? `<span class="tag ok">${lbl(best)}</span>` : '<span class="tag err">No match</span>'}</td><td class="m" style="white-space:normal">${m.map(lbl).join(', ') || '—'}</td></tr><tr class="explain-row"><td colspan="3">${exp}</td></tr>`;
+  }
+  $('#ir-table').innerHTML = rows.length ? h : '<tr><td>Add some addresses to check.</td></tr>';
+}
+$('#ir-ips').addEventListener('input', renderIR);
+$('#ir-ranges').addEventListener('input', renderIR);
+$('#ir-fill').addEventListener('click', () => {
+  const k = knownRanges(); if (!k.length) return;
+  const ta = $('#ir-ranges'), have = ta.value.trim();
+  ta.value = (have ? have + '\n' : '') + k.map(r => `${r.name} ${r.cidr}`).join('\n');
+  renderIR();
+});
+(function(){
+  let s = null, ir = null;
+  try { s = localStorage.getItem('snc.sum'); ir = JSON.parse(localStorage.getItem('snc.ir')); } catch(e){}
+  $('#sum-in').value = s ?? '10.1.0.0/24\n10.1.1.0/24\n10.1.2.0/24\n10.1.3.0/24\n10.1.4.0/23\n10.1.2.128/25';
+  $('#ir-ips').value = ir?.ips ?? '10.1.2.37\n10.1.9.200\n172.16.0.5\n2001:db8:abcd:12::50';
+  $('#ir-ranges').value = ir?.ranges ?? 'vnet-app-prod 10.1.0.0/20\nsnet-web 10.1.0.0/24\nsnet-app 10.1.2.0/25\non-prem 192.168.0.0/16\nipv6-site 2001:db8:abcd::/48';
+})();
+
+/* ---------- organisation address plan ---------- */
+const ORG_CATS = { onprem:'On-premises', azure:'Azure', aws:'AWS', gcp:'Google Cloud', growth:'Reserved for growth', other:'Other' };
+const ORG_COLORS = { onprem:'#5E6C00', azure:'#0F6CBD', aws:'#C65D00', gcp:'#0B7A5A', growth:'#7D8C9B', other:'#8A3FFC' };
+const ORG_PRESET = { space:'10.0.0.0/8', blocks:[
+  { name:'Head office & datacenter', cat:'onprem', mode:'cidr', value:'10.0.0.0/16' },
+  { name:'Branch offices', cat:'onprem', mode:'addresses', value:'5000' },
+  { name:'Azure West Europe hub', cat:'azure', mode:'prefix', value:'22' },
+  { name:'Azure West Europe production', cat:'azure', mode:'prefix', value:'16' },
+  { name:'Azure West Europe dev-test', cat:'azure', mode:'prefix', value:'18' },
+  { name:'AWS eu-west-1 production', cat:'aws', mode:'prefix', value:'16' },
+  { name:'AWS eu-west-1 dev', cat:'aws', mode:'prefix', value:'18' },
+  { name:'Google Cloud europe-west1', cat:'gcp', mode:'prefix', value:'16' },
+  { name:'Future regions', cat:'growth', mode:'prefix', value:'12' },
+]};
+let org; try { org = JSON.parse(localStorage.getItem('snc.org')); } catch(e){}
+if (!org || !Array.isArray(org.blocks)) org = JSON.parse(JSON.stringify(ORG_PRESET));
+let orgLast = null;
+function orgSave(){ try { localStorage.setItem('snc.org', JSON.stringify(org)); } catch(e){} }
+function orgSyncTop(){ $('#org-space').value = org.space; }
+$('#org-space').addEventListener('input', e => { org.space = e.target.value; orgPlan(); });
+$('#org-preset').addEventListener('click', () => { org = JSON.parse(JSON.stringify(ORG_PRESET)); orgSyncTop(); orgRenderRows(); orgPlan(); });
+$('#org-clear').addEventListener('click', () => { org = { space:'10.0.0.0/8', blocks:[] }; orgSyncTop(); orgRenderRows(); orgPlan(); });
+function orgRenderRows(){
+  const cats = Object.entries(ORG_CATS).map(([k, l]) => `<option value="${k}">${l}</option>`).join('');
+  $('#org-rows').innerHTML = org.blocks.map((s, i) => `<div class="srow" data-i="${i}">
+      <div><label>Name</label><input data-f="name" value="${esc(s.name)}"></div>
+      <div><label>Category</label><select data-f="cat">${cats}</select></div>
+      <div><label>Size by</label><select data-f="mode"><option value="prefix">Prefix length</option><option value="addresses">Addresses needed</option><option value="cidr">Existing range</option></select></div>
+      <div><label>${s.mode === 'prefix' ? 'Prefix (/n)' : s.mode === 'addresses' ? 'Addresses' : 'CIDR'}</label><input data-f="value" value="${esc(s.value)}" spellcheck="false"></div>
+      <div class="rm"><button class="btn danger small" type="button" data-rm="${i}" aria-label="Remove ${esc(s.name)}">Remove</button></div>
+    </div>`).join('') || '<p class="note">No blocks yet. Add one, or start with your existing networks as exact ranges.</p>';
+  document.querySelectorAll('#org-rows .srow').forEach(row => { const s = org.blocks[+row.dataset.i]; row.querySelector('[data-f="cat"]').value = s.cat; row.querySelector('[data-f="mode"]').value = s.mode; });
+}
+$('#org-rows').addEventListener('input', e => { const row = e.target.closest('.srow'); if (!row) return; const f = e.target.dataset.f; if (f === 'name' || f === 'value'){ org.blocks[+row.dataset.i][f] = e.target.value; orgPlan(); } });
+$('#org-rows').addEventListener('change', e => {
+  const row = e.target.closest('.srow'); if (!row) return; const s = org.blocks[+row.dataset.i], f = e.target.dataset.f;
+  if (f === 'cat'){ s.cat = e.target.value; orgPlan(); }
+  else if (f === 'mode'){ s.mode = e.target.value; s.value = s.mode === 'prefix' ? '16' : s.mode === 'addresses' ? '1000' : ''; orgRenderRows(); orgPlan(); }
+});
+$('#org-rows').addEventListener('click', e => { const b = e.target.closest('[data-rm]'); if (!b) return; org.blocks.splice(+b.dataset.rm, 1); orgRenderRows(); orgPlan(); });
+$('#org-add').addEventListener('click', () => { org.blocks.push({ name:'New block', cat:'other', mode:'prefix', value:'16' }); orgRenderRows(); orgPlan(); });
+
+function orgPlan(){
+  orgSave();
+  const errors = [], warns = [], items = [];
+  let v;
+  try {
+    const r = parseCidr(org.space); v = block(r.ip, r.p);
+    if (v.net !== r.ip) warns.push(`${org.space.trim()} is not a network boundary — using ${cidrStr(v.net, v.p)}.`);
+    const t = ipType(v.net);
+    if (!t.startsWith('Private') && !t.startsWith('Shared')) warns.push(`${cidrStr(v.net, v.p)} is ${t.toLowerCase()} space. Internal networks should normally use private ranges.`);
+  } catch(e){ errors.push('Address space: ' + e.message); }
+  if (!v) return orgRender({ v:null, items, errors, warns, free:[] });
+  const names = {};
+  org.blocks.forEach((s, ti) => {
+    const notes = []; let p, fixed, need, bad = false;
+    const nm = (s.name || '').trim();
+    if (!nm) notes.push(['err', 'Name required']); else if (names[nm.toLowerCase()]) notes.push(['err', 'Duplicate name']);
+    names[nm.toLowerCase()] = 1;
+    try {
+      const val = String(s.value).trim();
+      if (s.mode === 'addresses'){
+        if (!/^\d+$/.test(val) || +val < 1) throw new Error('Enter a number of addresses');
+        need = +val; p = 32 - Math.ceil(Math.log2(need));
+      } else if (s.mode === 'prefix'){
+        const pv = val.replace(/^\//, ''); if (!/^\d{1,2}$/.test(pv) || +pv > 32) throw new Error('Enter a prefix like 16'); p = +pv;
+      } else {
+        const r = parseCidr(val); const b = block(r.ip, r.p);
+        if (b.net !== r.ip) throw new Error(`Not a network address — did you mean ${cidrStr(b.net, b.p)}?`);
+        p = r.p; fixed = b.net;
+      }
+      if (p < v.p) throw new Error(`Bigger than the address space (/${v.p})`);
+    } catch(e){ notes.push(['err', e.message]); bad = true; }
+    items.push({ ti, ai:0, s, cat:s.cat, label:nm || 'block', p, fixed, need, bad, size: bad ? 0 : 2 ** (32 - p), notes });
+  });
+  const free = allocate(v, items);
+  orgRender({ v, items, errors, warns, free });
+}
+function orgExplain(r){
+  const sz = r.size, p = r.p, parts = [];
+  if (r.s.mode === 'cidr') parts.push(`Pinned at ${cidrStr(r.net, p)} because it already exists. Everything else is planned around it, so nothing new can clash with it.`);
+  else if (r.s.mode === 'addresses') parts.push(`You need ${fmt(r.need)} addresses. Blocks only come in powers of two, so it gets ${fmt(sz)} addresses, a /${p}.`);
+  else parts.push(`A /${p} holds ${fmt(sz)} addresses.`);
+  if (r.cat === 'azure') parts.push(sz >= 8192 ? `That is room for ${fmt(Math.floor(sz / 4096))} VNets of /20 (4,096 addresses each), or fewer, larger ones.` : 'Enough for one VNet of this size.');
+  else if (r.cat === 'aws') parts.push(p < 16 ? `An AWS VPC block can be at most a /16, so this holds up to ${fmt(sz / 65536)} VPCs of /16, or many more smaller ones.` : p > 28 ? 'This is smaller than the smallest AWS VPC (/28).' : 'This fits one VPC, since VPC blocks can be anything from /16 to /28.');
+  else if (r.cat === 'gcp') parts.push('Subnets for any region can be carved from it. GKE pod ranges are large, so keep this generous if you will run Kubernetes.');
+  else if (r.cat === 'growth') parts.push('Deliberately left empty so a new region, cloud or acquisition can get its own clean block later.');
+  else if (r.cat === 'onprem' && r.s.mode !== 'cidr') parts.push('Keeping sites together means one VPN route can cover all of them.');
+  if (r.s.mode !== 'cidr') parts.push(`It sits at the first free spot that starts on a multiple of its size, which means the whole block can be announced as a single route: ${cidrStr(r.net, p)}.`);
+  if (['azure', 'aws', 'gcp'].includes(r.cat)) parts.push(`Use the button to open it in the ${ORG_CATS[r.cat]} planner as that network's address space${r.cat === 'aws' && p < 16 ? ' (the first /16 of it, the most a single VPC can use)' : ''}.`);
+  return parts.join(' ');
+}
+function orgExplainBad(r){
+  const t = r.notes.map(x => x[1]).join(' ');
+  if (/No room/.test(t)) return 'There is no free, aligned block this big left. Shrink other blocks or use a bigger address space.';
+  if (/Overlaps/.test(t)) return 'Two existing ranges overlap each other. Check them; real networks that overlap cannot be connected without NAT.';
+  if (/Outside/.test(t)) return 'This existing range is not inside the address space you are dividing. Either widen the address space or leave this range out.';
+  if (/Bigger than/.test(t)) return 'A block cannot be bigger than the space it is carved from.';
+  return 'Fix the value above to place this block.';
+}
+function orgRender(P){
+  orgLast = P;
+  const { v, items, errors, warns, free } = P;
+  $('#org-msgs').innerHTML = [...errors.map(m => ['err', m]), ...warns.map(m => ['warn', m])].map(([c, m]) => `<li class="${c}">${esc(m)}</li>`).join('');
+  if (!v){ ['#org-stats', '#org-map', '#org-scale', '#org-table', '#org-free', '#org-sum'].forEach(s => $(s).innerHTML = ''); return; }
+  const placed = items.filter(r => !r.bad && r.net !== undefined), used = placed.reduce((a, r) => a + r.size, 0);
+  $('#org-stats').innerHTML = [[cidrStr(v.net, v.p), 'Address space'], [fmt(v.size), 'Total addresses'], [fmt(used), 'Allocated'], [fmt(v.size - used), 'Unallocated'], [(used / v.size * 100).toFixed(1) + '%', 'Allocated']]
+    .map(([n, l]) => `<div class="stat"><div class="n">${n}</div><div class="l">${l}</div></div>`).join('');
+  $('#org-map').innerHTML = placed.map(r => { const left = (r.net - v.net) / v.size * 100, w = r.size / v.size * 100; return `<div class="seg" style="left:${left}%;width:${w}%;background:${ORG_COLORS[r.cat] || '#888'}" title="${esc(r.label)} — ${cidrStr(r.net, r.p)}">${w > 7 ? esc(r.label) : ''}</div>`; }).join('');
+  $('#org-scale').innerHTML = `<span>${intToIp(v.net)}</span><span>${intToIp(v.net + v.size / 2)}</span><span>${intToIp(v.bc)}</span>`;
+  const sorted = [...items].sort((a, b) => (a.net ?? Infinity) - (b.net ?? Infinity) || a.ti - b.ti);
+  let h = '<tr><th></th><th>Block</th><th>Category</th><th>CIDR</th><th>Range</th><th>Addresses</th><th>Notes</th><th></th></tr>';
+  for (const r of sorted){
+    const col = ORG_COLORS[r.cat] || '#888', tags = r.notes.map(([c, m]) => `<span class="tag ${c}">${esc(m)}</span>`).join('');
+    if (r.bad || r.net === undefined){ h += `<tr><td><span class="sw" style="background:${col};opacity:.35"></span></td><td>${esc(r.label)}</td><td>${ORG_CATS[r.cat] || ''}</td><td>—</td><td>—</td><td>—</td><td>${tags}</td><td></td></tr><tr class="explain-row"><td colspan="8">${orgExplainBad(r)}</td></tr>`; continue; }
+    const use = ['azure', 'aws', 'gcp'].includes(r.cat) ? `<button class="btn ghost small" type="button" data-use="${r.ti}">Plan in ${ORG_CATS[r.cat]}</button>` : '';
+    h += `<tr><td><span class="sw" style="background:${col}"></span></td><td>${esc(r.label)}</td><td>${ORG_CATS[r.cat] || ''}</td><td class="m">${cidrStr(r.net, r.p)}</td><td class="m">${intToIp(r.net)} – ${intToIp(r.net + r.size - 1)}</td><td class="m">${fmt(r.size)}</td><td>${tags || (r.s.mode === 'cidr' ? '<span class="tag info">Existing</span>' : '<span class="tag ok">OK</span>')}</td><td>${use}</td></tr><tr class="explain-row"><td colspan="8">${orgExplain(r)}</td></tr>`;
+  }
+  $('#org-table').innerHTML = items.length ? h : '<tr><td>No blocks yet.</td></tr>';
+  let sh = '';
+  for (const cat of Object.keys(ORG_CATS)){
+    const g = placed.filter(r => r.cat === cat); if (!g.length) continue;
+    const routes = mergeRanges(g.map(r => ({ start:r.net, end:r.net + r.size - 1 }))).flatMap(m => rangeToCidrs(m.start, m.end));
+    sh += `<div class="sumgroup"><b><span class="sw" style="background:${ORG_COLORS[cat]}"></span>${ORG_CATS[cat]}</b> <span class="free" style="display:inline-flex;margin:0">${routes.map(c => `<span>${cidrStr(c.net, c.p)}</span>`).join('')}</span></div>`;
+  }
+  $('#org-sum').innerHTML = sh || '<p class="note">Nothing allocated yet.</p>';
+  $('#org-free').innerHTML = free.length ? free.slice(0, 60).map(f => `<span>${cidrStr(f.net, f.p)}</span>`).join('') + (free.length > 60 ? `<span>+${free.length - 60} more</span>` : '') : '<span class="hint" style="margin:0;border:0;background:none">None — the address space is fully allocated.</span>';
+}
+$('#org-table').addEventListener('click', e => {
+  const b = e.target.closest('[data-use]'); if (!b || !orgLast) return;
+  const r = orgLast.items.find(x => x.ti === +b.dataset.use); if (!r || r.bad) return;
+  const c = cidrStr(r.net, r.p);
+  if (r.cat === 'azure'){ st.space = c; syncTop(); plan(); tabTo('azure'); }
+  else if (r.cat === 'aws'){ aw.cidr = r.p < 16 ? cidrStr(r.net, 16) : c; awsSyncTop(); awsPlan(); tabTo('aws'); }
+  else if (r.cat === 'gcp'){ gc.space = c; gcSyncTop(); gcPlan(); tabTo('gcp'); }
+});
+
+/* ---------- Google Cloud planner ---------- */
+const GC_TYPES = {
+  general:   { label:'Standard subnet (VMs)', desc:`An ordinary regional subnet for Compute Engine VMs and anything else. Private Google Access is switched on in the generated code, so VMs without public IPs can still reach Google APIs.` },
+  gke:       { label:'GKE cluster (nodes, pods, services)', nodes:true, desc:`A Kubernetes cluster needs three ranges: a primary range for the nodes and two secondary ranges for pods and services. Enter the maximum number of nodes and the planner sizes all three.` },
+  proxy:     { label:'Proxy-only subnet (load balancers)', rec:23, min:26, purpose:'REGIONAL_MANAGED_PROXY', desc:`Regional and internal HTTP(S) load balancers run their proxies here. You need one per region where you use them, and nothing else can go in it. /23 is recommended.` },
+  psc:       { label:'Private Service Connect (publish a service)', purpose:'PRIVATE_SERVICE_CONNECT', desc:`Used when you publish your own service to other VPCs or customers with Private Service Connect. Incoming connections are translated to addresses from this subnet.` },
+  connector: { label:'Serverless VPC Access connector', exact:28, desc:`Lets Cloud Run, Cloud Functions and App Engine reach private resources in the VPC. The connector needs exactly a /28 that nothing else uses.` },
+  psa:       { label:'Private services access (Cloud SQL etc.)', rec:20, min:24, global:true, desc:`A range you hand to Google for managed services such as Cloud SQL, Memorystore and Filestore to use privately. It is global rather than regional. At least /24; a bigger range leaves room for more services.` },
+};
+const GC_PRESET = { name:'vpc-main', space:'10.40.0.0/16', project:'my-project-id', subnets:[
+  { name:'web-europe', region:'europe-west1', type:'general', mode:'hosts', value:'200' },
+  { name:'gke-prod', region:'europe-west1', type:'gke', mode:'hosts', value:'20' },
+  { name:'proxy-europe', region:'europe-west1', type:'proxy', mode:'prefix', value:'23' },
+  { name:'run-connector', region:'europe-west1', type:'connector', mode:'prefix', value:'28' },
+  { name:'web-us', region:'us-central1', type:'general', mode:'hosts', value:'100' },
+  { name:'google-services', region:'global', type:'psa', mode:'prefix', value:'20' },
+]};
+let gc; try { gc = JSON.parse(localStorage.getItem('snc.gcp')); } catch(e){}
+if (!gc || !Array.isArray(gc.subnets)) gc = JSON.parse(JSON.stringify(GC_PRESET));
+let gcCodeKind = 'gcloud', gcLast = null;
+function gcSave(){ try { localStorage.setItem('snc.gcp', JSON.stringify(gc)); } catch(e){} }
+function gcSyncTop(){ $('#gc-name').value = gc.name; $('#gc-space').value = gc.space; $('#gc-project').value = gc.project; }
+['name', 'space', 'project'].forEach(k => $('#gc-' + k).addEventListener('input', e => { gc[k] = e.target.value; gcPlan(); }));
+$('#gc-preset').addEventListener('click', () => { gc = JSON.parse(JSON.stringify(GC_PRESET)); gcSyncTop(); gcRenderRows(); gcPlan(); });
+$('#gc-clear').addEventListener('click', () => { gc = { name:'vpc-new', space:'10.40.0.0/16', project:'my-project-id', subnets:[] }; gcSyncTop(); gcRenderRows(); gcPlan(); });
+function gcRenderRows(){
+  const opts = Object.entries(GC_TYPES).map(([k, t]) => `<option value="${k}">${esc(t.label)}</option>`).join('');
+  $('#gc-rows').innerHTML = gc.subnets.map((s, i) => {
+    const t = GC_TYPES[s.type] || GC_TYPES.general;
+    const modeOpts = t.nodes ? '<option value="hosts">Number of nodes</option>' : '<option value="hosts">Hosts needed</option><option value="prefix">Prefix length</option><option value="cidr">Exact CIDR</option>';
+    const vl = t.nodes ? 'Max nodes' : s.mode === 'hosts' ? 'Hosts' : s.mode === 'prefix' ? 'Prefix (/n)' : 'CIDR';
+    return `<div class="srow" data-i="${i}">
+      <div><label>Name</label><input data-f="name" value="${esc(s.name)}" spellcheck="false"></div>
+      <div><label>Region</label><input data-f="region" value="${esc(s.region)}" spellcheck="false" ${t.global ? 'disabled title="Private services access ranges are global"' : ''}></div>
+      <div><label>Purpose</label><select data-f="type">${opts}</select></div>
+      <div><label>Size by</label><select data-f="mode" ${t.nodes ? 'disabled' : ''}>${modeOpts}</select></div>
+      <div><label>${vl}</label><input data-f="value" value="${esc(s.value)}" spellcheck="false"></div>
+      <div class="rm"><button class="btn danger small" type="button" data-rm="${i}" aria-label="Remove ${esc(s.name)}">Remove</button></div>
+      <div class="explain-txt" style="grid-column:1/-1;margin-top:0"><b>${esc(t.label)}:</b> ${t.desc}</div>
+    </div>`;
+  }).join('') || '<p class="note">No subnets yet. Add one to start.</p>';
+  document.querySelectorAll('#gc-rows .srow').forEach(row => { const s = gc.subnets[+row.dataset.i]; row.querySelector('[data-f="type"]').value = s.type; row.querySelector('[data-f="mode"]').value = s.mode; });
+}
+$('#gc-rows').addEventListener('input', e => { const row = e.target.closest('.srow'); if (!row) return; const f = e.target.dataset.f; if (['name', 'region', 'value'].includes(f)){ gc.subnets[+row.dataset.i][f] = e.target.value; gcPlan(); } });
+$('#gc-rows').addEventListener('change', e => {
+  const row = e.target.closest('.srow'); if (!row) return; const s = gc.subnets[+row.dataset.i], f = e.target.dataset.f;
+  if (f === 'type'){
+    s.type = e.target.value; const T = GC_TYPES[s.type];
+    if (T.nodes){ s.mode = 'hosts'; s.value = '10'; } else if (T.exact){ s.mode = 'prefix'; s.value = String(T.exact); } else if (T.rec){ s.mode = 'prefix'; s.value = String(T.rec); }
+    if (T.global) s.region = 'global'; else if (s.region === 'global') s.region = 'europe-west1';
+    gcRenderRows(); gcPlan();
+  } else if (f === 'mode'){ s.mode = e.target.value; s.value = s.mode === 'hosts' ? '50' : s.mode === 'prefix' ? '24' : ''; gcRenderRows(); gcPlan(); }
+});
+$('#gc-rows').addEventListener('click', e => { const b = e.target.closest('[data-rm]'); if (!b) return; gc.subnets.splice(+b.dataset.rm, 1); gcRenderRows(); gcPlan(); });
+$('#gc-add').addEventListener('click', () => { gc.subnets.push({ name:'subnet-' + (gc.subnets.length + 1), region:'europe-west1', type:'general', mode:'hosts', value:'50' }); gcRenderRows(); gcPlan(); });
+
+function gcPlan(){
+  gcSave();
+  const errors = [], warns = [], items = [];
+  let v;
+  try {
+    const r = parseCidr(gc.space); v = block(r.ip, r.p);
+    if (v.net !== r.ip) warns.push(`${gc.space.trim()} is not a network boundary — using ${cidrStr(v.net, v.p)}.`);
+    for (const [c, why] of [['0.0.0.0/8', '"this network"'], ['127.0.0.0/8', 'loopback'], ['169.254.0.0/16', 'link-local'], ['224.0.0.0/4', 'multicast'], ['240.0.0.0/4', 'reserved']]){
+      const f = parseCidr(c), fb = block(f.ip, f.p); if (fb.net <= v.bc && v.net <= fb.bc) errors.push(`The planning block overlaps ${c} (${why}), which Google Cloud does not allow for subnets.`);
+    }
+    const t = ipType(v.net);
+    if (!t.startsWith('Private') && !t.startsWith('Shared') && !errors.length) warns.push(`${cidrStr(v.net, v.p)} is ${t.toLowerCase()} space. Google Cloud can use it as "privately used public IP" space, but your VMs could then no longer reach the real owners of those addresses on the internet.`);
+    const am = block(ipToInt('10.128.0.0'), 9);
+    if (am.net <= v.bc && v.net <= am.bc) warns.push('This overlaps 10.128.0.0/9, the range auto mode VPCs use (including the "default" network). If you might ever peer with one, pick another range.');
+  } catch(e){ errors.push('Planning block: ' + e.message); }
+  if (!v) return gcRender({ v:null, items, errors, warns, free:[] });
+  const names = {}, proxyRegions = {};
+  gc.subnets.forEach((s, ti) => {
+    const T = GC_TYPES[s.type] || GC_TYPES.general;
+    const notes = []; let bad = false, p, hosts, rawP, fixed;
+    const nm = (s.name || '').trim(), region = T.global ? 'global' : (s.region || '').trim();
+    if (!/^[a-z]([-a-z0-9]{0,61}[a-z0-9])?$/.test(nm)) notes.push(['err', 'Use lowercase letters, digits and hyphens, starting with a letter']);
+    if (names[nm]) notes.push(['err', 'Duplicate name']); names[nm] = 1;
+    if (!region) notes.push(['err', 'Region required']);
+    if (T.purpose === 'REGIONAL_MANAGED_PROXY'){ if (proxyRegions[region]) notes.push(['warn', 'Only one active proxy-only subnet per region']); proxyRegions[region] = 1; }
+    try {
+      const val = String(s.value).trim();
+      if (T.nodes || s.mode === 'hosts'){
+        if (!/^\d+$/.test(val) || +val < 1) throw new Error(T.nodes ? 'Enter a node count' : 'Enter a host count');
+        hosts = +val; rawP = 32 - Math.ceil(Math.log2(hosts + 4)); p = Math.min(29, rawP);
+      } else if (s.mode === 'prefix'){
+        const pv = val.replace(/^\//, ''); if (!/^\d{1,2}$/.test(pv) || +pv > 32) throw new Error('Enter a prefix like 24'); p = +pv;
+      } else {
+        const r = parseCidr(val), b = block(r.ip, r.p);
+        if (b.net !== r.ip) throw new Error(`Not a network address — did you mean ${cidrStr(b.net, b.p)}?`);
+        p = r.p; fixed = b.net;
+      }
+      if (p > 29) throw new Error('Google Cloud ranges must be /29 or larger');
+      if (p < v.p) throw new Error(`Bigger than the planning block (/${v.p})`);
+      if (T.exact && p !== T.exact) notes.push(['err', `Must be exactly /${T.exact}`]);
+      else if (T.min && p > T.min) notes.push(['err', `Needs /${T.min} or larger`]);
+      else if (T.rec && p > T.rec) notes.push(['warn', `/${T.rec} or larger recommended`]);
+    } catch(e){ notes.push(['err', e.message]); bad = true; }
+    const base = { ti, s, T, region, hosts, rawP };
+    items.push({ ...base, ai:0, role: T.global ? 'allocated' : 'primary', label:nm, p, fixed, bad, size: bad ? 0 : 2 ** (32 - p), notes });
+    if (T.nodes && !bad){
+      const pp = 32 - Math.ceil(Math.log2(hosts * 256));
+      items.push(pp < v.p ? { ...base, ai:1, role:'pods', label:nm + '-pods', p:pp, bad:true, size:0, notes:[['err', `Pod range /${pp} is bigger than the planning block`]] }
+                          : { ...base, ai:1, role:'pods', label:nm + '-pods', p:pp, bad:false, size:2 ** (32 - pp), notes:[] });
+      items.push(20 < v.p ? { ...base, ai:2, role:'services', label:nm + '-services', p:20, bad:true, size:0, notes:[['err', 'Service range /20 is bigger than the planning block']] }
+                          : { ...base, ai:2, role:'services', label:nm + '-services', p:20, bad:false, size:4096, notes:[] });
+    }
+  });
+  const free = allocate(v, items);
+  gcRender({ v, items, errors, warns, free });
+}
+const GC_ROLE = { primary:'Primary', pods:'Pods (secondary)', services:'Services (secondary)', allocated:'Allocated range' };
+function gcExplain(r){
+  const sz = r.size, p = r.p, a = r.net, bc = a + sz - 1, parts = [];
+  if (r.role === 'pods') parts.push(`The pod range, a secondary range on ${esc(r.s.name)}. GKE gives every node its own /24 (256 addresses) from it: a node runs up to 110 pods by default, and the spare room lets addresses be recycled safely. ${fmt(r.hosts)} nodes × 256 = ${fmt(r.hosts * 256)} addresses, rounded up to ${fmt(sz)} (/${p}). This range also caps the cluster at ${fmt(sz / 256)} nodes.`);
+  else if (r.role === 'services') parts.push('The service range, another secondary range. Each Kubernetes Service gets one stable virtual IP from it. /20 (4,096 services) is the GKE default and plenty for most clusters.');
+  else if (r.role === 'allocated') parts.push(`A /${p} holds ${fmt(sz)} addresses. This is not a subnet: Google creates subnets for each managed service inside it when you connect them privately, so the whole range is handed to Google and nothing is reserved up front.`);
+  else if (r.T.nodes) parts.push(`The node range. ${fmt(r.hosts)} nodes plus Google's 4 reserved addresses makes ${fmt(r.hosts + 4)}${r.rawP > 29 ? ', but the smallest range is a /29' : ''}, so it gets ${fmt(sz)} addresses (/${p}). Leave headroom, because GKE briefly adds extra (surge) nodes during upgrades.`);
+  else if (r.s.mode === 'hosts') parts.push(r.rawP > 29 ? `You need ${fmt(r.hosts)} address${r.hosts > 1 ? 'es' : ''}. Adding Google's 4 reserved makes ${fmt(r.hosts + 4)}, but the smallest subnet is a /29 (8 addresses), so it gets a /29 with 4 usable.` : `You need ${fmt(r.hosts)} addresses. Adding Google's 4 reserved makes ${fmt(r.hosts + 4)}. Sizes only come in powers of two and ${fmt(sz / 2)} is too small, so it gets ${fmt(sz)} addresses, a /${p}, leaving ${fmt(sz - 4 - r.hosts)} spare.`);
+  else if (r.s.mode === 'prefix') parts.push(`You chose /${p}: 2<sup>${32 - p}</sup> = ${fmt(sz)} addresses, ${fmt(sz - 4)} usable after Google's 4.`);
+  else parts.push(`You pinned this subnet to ${cidrStr(a, p)}.`);
+  if (r.fixed === undefined) parts.push(`It sits at the first free spot that starts on a multiple of ${fmt(sz)}, because every range has to line up with its own size.`);
+  if (r.role === 'primary') parts.push(`Google keeps ${intToIp(a)} (network address), ${intToIp(a + 1)} (default gateway), ${intToIp(bc - 1)} (reserved for future use) and ${intToIp(bc)} (broadcast), so your resources get ${intToIp(a + 2)} to ${intToIp(bc - 2)}. Unlike Azure and AWS, Google reserves the second-to-last address instead of extra ones at the start.`);
+  if (r.role === 'primary' || r.role === 'allocated'){
+    if (r.T.exact && p !== r.T.exact) parts.push(`This purpose needs exactly a /${r.T.exact}.`);
+    else if (r.T.min && p > r.T.min) parts.push(`Google needs at least /${r.T.min} for this purpose.`);
+    else if (r.T.rec && p > r.T.rec) parts.push(`/${r.T.rec} or larger is recommended so it has room to grow.`);
+  }
+  return parts.join(' ');
+}
+function gcExplainBad(r){
+  const t = r.notes.map(x => x[1]).join(' ');
+  if (/No room/.test(t)) return 'There is no free, aligned block this big left in the planning block. Make the planning block bigger or shrink other ranges. GKE pod ranges are often the culprit.';
+  if (/29 or larger/.test(t)) return 'Google Cloud does not allow ranges smaller than /29 (8 addresses, 4 usable).';
+  if (/Bigger than/.test(t)) return 'A range cannot be bigger than the planning block. Use a bigger block or a smaller range.';
+  if (/Overlaps|Outside/.test(t)) return 'An exact CIDR must sit inside the planning block and not overlap other ranges.';
+  if (/lowercase|Duplicate/.test(t)) return 'Google Cloud names must be unique and use only lowercase letters, digits and hyphens, starting with a letter.';
+  return 'Fix the value in the Subnets section to place this range.';
+}
+function gcRender(P){
+  gcLast = P;
+  const { v, items, errors, warns, free } = P;
+  $('#gc-msgs').innerHTML = [...errors.map(m => ['err', m]), ...warns.map(m => ['warn', m])].map(([c, m]) => `<li class="${c}">${esc(m)}</li>`).join('');
+  if (!v){ ['#gc-stats', '#gc-map', '#gc-scale', '#gc-table', '#gc-free'].forEach(s => $(s).innerHTML = ''); gcRenderCode(); return; }
+  const placed = items.filter(r => !r.bad && r.net !== undefined), used = placed.reduce((a, r) => a + r.size, 0);
+  const usable = placed.reduce((a, r) => a + (r.role === 'primary' ? r.size - 4 : r.size), 0);
+  $('#gc-stats').innerHTML = [[cidrStr(v.net, v.p), 'Planning block'], [fmt(placed.length), 'Ranges'], [fmt(used), 'Allocated'], [fmt(usable), 'Usable'], [fmt(v.size - used), 'Unallocated'], [(used / v.size * 100).toFixed(1) + '%', 'Allocated']]
+    .map(([n, l]) => `<div class="stat"><div class="n">${n}</div><div class="l">${l}</div></div>`).join('');
+  $('#gc-map').innerHTML = placed.map(r => { const left = (r.net - v.net) / v.size * 100, w = r.size / v.size * 100; return `<div class="seg" style="left:${left}%;width:${w}%;background:${COLORS[r.ti % COLORS.length]};${r.role === 'pods' || r.role === 'services' ? 'opacity:.75' : ''}" title="${esc(r.label)} — ${cidrStr(r.net, r.p)}">${w > 7 ? esc(r.label) : ''}</div>`; }).join('');
+  $('#gc-scale').innerHTML = `<span>${intToIp(v.net)}</span><span>${intToIp(v.net + v.size / 2)}</span><span>${intToIp(v.bc)}</span>`;
+  const sorted = [...items].sort((a, b) => (a.net ?? Infinity) - (b.net ?? Infinity) || a.ti - b.ti || a.ai - b.ai);
+  let h = '<tr><th></th><th>Range</th><th>Region</th><th>Type</th><th>CIDR</th><th>Usable range</th><th>Usable IPs</th><th>Google reserved</th><th>Notes</th></tr>';
+  for (const r of sorted){
+    const col = COLORS[r.ti % COLORS.length], tags = r.notes.map(([c, m]) => `<span class="tag ${c}">${esc(m)}</span>`).join('');
+    if (r.bad || r.net === undefined){ h += `<tr><td><span class="sw" style="background:${col};opacity:.35"></span></td><td>${esc(r.label)}</td><td class="m">${esc(r.region)}</td><td>${GC_ROLE[r.role]}</td><td>—</td><td>—</td><td>—</td><td>—</td><td>${tags}</td></tr><tr class="explain-row"><td colspan="9">${gcExplainBad(r)}</td></tr>`; continue; }
+    const a = r.net, bc = a + r.size - 1, prim = r.role === 'primary';
+    const resv = prim ? `${intToIp(a)} network\n${intToIp(a + 1)} default gateway\n${intToIp(bc - 1)} reserved by Google\n${intToIp(bc)} broadcast` : '';
+    h += `<tr><td><span class="sw" style="background:${col}"></span></td><td>${esc(r.label)}<div class="hint" style="margin:0">${esc(r.T.label)}</div></td><td class="m">${esc(r.region)}</td><td>${GC_ROLE[r.role]}</td>
+      <td class="m">${cidrStr(a, r.p)}</td><td class="m">${intToIp(prim ? a + 2 : a)} – ${intToIp(prim ? bc - 2 : bc)}</td><td class="m">${fmt(prim ? r.size - 4 : r.size)}</td>
+      <td class="m" ${prim ? `title="${esc(resv)}" style="cursor:help"` : ''}>${prim ? `.${a & 255}–.${(a + 1) & 255}, .${(bc - 1) & 255}–.${bc & 255}` : '—'}</td><td>${tags || '<span class="tag ok">OK</span>'}</td></tr><tr class="explain-row"><td colspan="9">${gcExplain(r)}</td></tr>`;
+  }
+  $('#gc-table').innerHTML = items.length ? h : '<tr><td>No subnets yet.</td></tr>';
+  $('#gc-free').innerHTML = free.length ? free.map(f => `<span>${cidrStr(f.net, f.p)}</span>`).join('') : '<span class="hint" style="margin:0;border:0;background:none">None — the planning block is fully allocated.</span>';
+  gcRenderCode();
+}
+function gcRenderCode(){
+  const P = gcLast, ok = P && P.v ? P.items.filter(r => !r.bad && r.net !== undefined) : [];
+  const net = (gc.name || 'vpc').trim(), proj = (gc.project || 'my-project-id').trim();
+  const prim = ok.filter(r => r.role === 'primary' || r.role === 'allocated').sort((a, b) => a.ti - b.ti);
+  const sec = ti => ok.filter(r => r.ti === ti && (r.role === 'pods' || r.role === 'services')).sort((a, b) => a.ai - b.ai);
+  const tfId = s => { const x = String(s).replace(/[^A-Za-z0-9_]/g, '_'); return /^[0-9]/.test(x) ? 's_' + x : x; };
+  let out = '';
+  if (gcCodeKind === 'gcloud'){
+    out = `gcloud config set project ${proj}\n\n# Create the VPC network with custom (hand-planned) subnets\ngcloud compute networks create ${net} --subnet-mode=custom\n`;
+    const psa = [];
+    for (const r of prim){
+      const c = cidrStr(r.net, r.p);
+      if (r.s.type === 'connector') out += `\n# ${r.label}: Serverless VPC Access connector\ngcloud compute networks vpc-access connectors create ${r.label} \\\n  --region=${r.region} --network=${net} --range=${c}\n`;
+      else if (r.s.type === 'psa'){ psa.push(r.label); out += `\n# ${r.label}: range for Google-managed services\ngcloud compute addresses create ${r.label} --global \\\n  --purpose=VPC_PEERING --addresses=${intToIp(r.net)} --prefix-length=${r.p} --network=${net}\n`; }
+      else {
+        out += `\ngcloud compute networks subnets create ${r.label} \\\n  --network=${net} --region=${r.region} --range=${c}`;
+        const s2 = sec(r.ti); if (s2.length) out += ` \\\n  --secondary-range=${s2.map(x => `${x.label}=${cidrStr(x.net, x.p)}`).join(',')}`;
+        if (r.T.purpose === 'REGIONAL_MANAGED_PROXY') out += ' \\\n  --purpose=REGIONAL_MANAGED_PROXY --role=ACTIVE';
+        else if (r.T.purpose) out += ` \\\n  --purpose=${r.T.purpose}`;
+        else out += ' \\\n  --enable-private-ip-google-access';
+        out += '\n';
+      }
+    }
+    if (psa.length) out += `\n# Connect the Google services range to your VPC\ngcloud services vpc-peerings connect --service=servicenetworking.googleapis.com \\\n  --ranges=${psa.join(',')} --network=${net}\n`;
+  } else if (gcCodeKind === 'tf'){
+    out = `provider "google" {\n  project = "${proj}"\n}\n\nresource "google_compute_network" "main" {\n  name                    = "${net}"\n  auto_create_subnetworks = false\n}\n`;
+    const psa = [];
+    for (const r of prim){
+      const c = cidrStr(r.net, r.p), id = tfId(r.label);
+      if (r.s.type === 'connector') out += `\nresource "google_vpc_access_connector" "${id}" {\n  name          = "${r.label}"\n  region        = "${r.region}"\n  ip_cidr_range = "${c}"\n  network       = google_compute_network.main.name\n}\n`;
+      else if (r.s.type === 'psa'){ psa.push(id); out += `\nresource "google_compute_global_address" "${id}" {\n  name          = "${r.label}"\n  purpose       = "VPC_PEERING"\n  address_type  = "INTERNAL"\n  address       = "${intToIp(r.net)}"\n  prefix_length = ${r.p}\n  network       = google_compute_network.main.id\n}\n`; }
+      else {
+        out += `\nresource "google_compute_subnetwork" "${id}" {\n  name          = "${r.label}"\n  region        = "${r.region}"\n  ip_cidr_range = "${c}"\n  network       = google_compute_network.main.id\n`;
+        if (r.T.purpose === 'REGIONAL_MANAGED_PROXY') out += '  purpose       = "REGIONAL_MANAGED_PROXY"\n  role          = "ACTIVE"\n';
+        else if (r.T.purpose) out += `  purpose       = "${r.T.purpose}"\n`;
+        else out += '  private_ip_google_access = true\n';
+        for (const x of sec(r.ti)) out += `\n  secondary_ip_range {\n    range_name    = "${x.label}"\n    ip_cidr_range = "${cidrStr(x.net, x.p)}"\n  }\n`;
+        out += '}\n';
+      }
+    }
+    if (psa.length) out += `\nresource "google_service_networking_connection" "google_services" {\n  network                 = google_compute_network.main.id\n  service                 = "servicenetworking.googleapis.com"\n  reserved_peering_ranges = [${psa.map(i => `google_compute_global_address.${i}.name`).join(', ')}]\n}\n`;
+  } else {
+    out = 'network,range,region,type,purpose,cidr,first_usable,last_usable,usable_ips\n';
+    out += [...ok].sort((a, b) => a.ti - b.ti || a.ai - b.ai).map(r => { const pr = r.role === 'primary'; return [net, r.label, r.region, GC_ROLE[r.role], r.T.label, cidrStr(r.net, r.p), intToIp(pr ? r.net + 2 : r.net), intToIp(pr ? r.net + r.size - 3 : r.net + r.size - 1), pr ? r.size - 4 : r.size]
+      .map(x => /[",]/.test(String(x)) ? '"' + String(x).replace(/"/g, '""') + '"' : x).join(','); }).join('\n') + '\n';
+  }
+  const skipped = P ? P.items.length - ok.length : 0;
+  if (skipped > 0 && gcCodeKind !== 'csv') out = `# ${skipped} range(s) left out because of errors above\n` + out;
+  const EXPL = {
+    gcloud: 'Commands for the gcloud CLI. Run them in <b>Cloud Shell</b> (the terminal icon at the top of the Google Cloud console) or in a terminal after <code>gcloud auth login</code>. The first line selects your project; the rest create the network and its subnets in order.',
+    tf: 'Terraform describes the network as code and builds it for you. Save as <code>main.tf</code>, then run <code>terraform init</code>, <code>terraform plan</code> to preview and <code>terraform apply</code> to create it.',
+    csv: 'A plain list you can open in a spreadsheet or paste into documentation, so your team knows which ranges are taken.'
+  };
+  $('#gc-code-explain').innerHTML = EXPL[gcCodeKind];
+  $('#gc-code').textContent = out;
+}
+$('#gc-code-tabs').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; gcCodeKind = b.dataset.code; document.querySelectorAll('#gc-code-tabs button').forEach(x => x.setAttribute('aria-pressed', x === b)); gcRenderCode(); });
+
+/* ---------- security rules ---------- */
+const SERVICES = {
+  custom:{ label:'Custom' }, https:{ label:'HTTPS', proto:'tcp', ports:'443' }, http:{ label:'HTTP', proto:'tcp', ports:'80' },
+  ssh:{ label:'SSH', proto:'tcp', ports:'22' }, rdp:{ label:'Remote Desktop (RDP)', proto:'tcp', ports:'3389' },
+  mssql:{ label:'SQL Server', proto:'tcp', ports:'1433' }, pg:{ label:'PostgreSQL', proto:'tcp', ports:'5432' }, mysql:{ label:'MySQL', proto:'tcp', ports:'3306' },
+  redis:{ label:'Redis', proto:'tcp', ports:'6379' }, dns:{ label:'DNS', proto:'udp', ports:'53' }, icmp:{ label:'Ping (ICMP)', proto:'icmp', ports:'' }, all:{ label:'All traffic', proto:'any', ports:'' },
+};
+const PORT_NAMES = { 22:'SSH', 3389:'Remote Desktop', 443:'HTTPS', 80:'HTTP', 1433:'SQL Server', 5432:'PostgreSQL', 3306:'MySQL', 6379:'Redis', 53:'DNS', 8080:'web apps', 25:'email (SMTP)' };
+const RL_PRESET = { cloud:'azure', rg:'rg-app-prod', nsg:'nsg-app', sg:'sg-0123456789abcdef0', nacl:'acl-0123456789abcdef0', network:'vpc-main', rules:[
+  { name:'allow-https-from-internet', service:'https', proto:'tcp', ports:'443', src:'Internet', dst:'10.1.0.0/24', action:'allow' },
+  { name:'allow-web-to-app', service:'custom', proto:'tcp', ports:'8080', src:'10.1.0.0/24', dst:'10.1.2.0/25', action:'allow' },
+  { name:'allow-app-to-sql', service:'mssql', proto:'tcp', ports:'1433', src:'10.1.2.0/25', dst:'10.1.2.192/27', action:'allow' },
+  { name:'block-ssh-from-internet', service:'ssh', proto:'tcp', ports:'22', src:'Internet', dst:'Any', action:'deny' },
+]};
+let rl; try { rl = JSON.parse(localStorage.getItem('snc.rules')); } catch(e){}
+if (!rl || !Array.isArray(rl.rules)) rl = JSON.parse(JSON.stringify(RL_PRESET));
+function rlSave(){ try { localStorage.setItem('snc.rules', JSON.stringify(rl)); } catch(e){} }
+const RL_FIELDS = ['rg', 'nsg', 'sg', 'nacl', 'network'];
+function rlSyncTop(){ $('#rl-cloud').value = rl.cloud; RL_FIELDS.forEach(k => $('#rl-' + k).value = rl[k] || ''); rlShowTargets(); }
+function rlShowTargets(){ document.querySelectorAll('#panel-rules [data-cloud]').forEach(el => el.hidden = el.dataset.cloud !== rl.cloud); }
+$('#rl-cloud').addEventListener('change', e => { rl.cloud = e.target.value; rlShowTargets(); rlRender(); });
+RL_FIELDS.forEach(k => $('#rl-' + k).addEventListener('input', e => { rl[k] = e.target.value; rlRender(); }));
+$('#rl-preset').addEventListener('click', () => { const c = rl.cloud; rl = JSON.parse(JSON.stringify(RL_PRESET)); rl.cloud = c; rlSyncTop(); rlRenderRows(); rlRender(); });
+function rlRenderRows(){
+  const sv = Object.entries(SERVICES).map(([k, s]) => `<option value="${k}">${s.label}</option>`).join('');
+  $('#rl-rows').innerHTML = rl.rules.map((r, i) => `<div class="srow" data-i="${i}">
+      <div><label>Name</label><input data-f="name" value="${esc(r.name)}" spellcheck="false"></div>
+      <div><label>Service</label><select data-f="service">${sv}</select></div>
+      <div><label>Protocol</label><select data-f="proto"><option value="tcp">TCP</option><option value="udp">UDP</option><option value="icmp">ICMP</option><option value="any">Any</option></select></div>
+      <div><label>Ports</label><input data-f="ports" value="${esc(r.ports)}" placeholder="all" spellcheck="false"></div>
+      <div><label>Source</label><input data-f="src" value="${esc(r.src)}" list="rl-known" spellcheck="false"></div>
+      <div><label>Destination</label><input data-f="dst" value="${esc(r.dst)}" list="rl-known" spellcheck="false"></div>
+      <div><label>Action</label><select data-f="action"><option value="allow">Allow</option><option value="deny">Block</option></select></div>
+      <div class="rm"><button class="btn danger small" type="button" data-rm="${i}" aria-label="Remove ${esc(r.name)}">Remove</button></div>
+      <div class="rl-notes" data-rl-notes="${i}"></div>
+      <div class="explain-txt" style="grid-column:1/-1;margin-top:0" data-rl-exp="${i}"></div>
+    </div>`).join('') || '<p class="note">No rules yet. Add one, or load the example rules.</p>';
+  document.querySelectorAll('#rl-rows .srow').forEach(row => { const r = rl.rules[+row.dataset.i]; ['service', 'proto', 'action'].forEach(f => row.querySelector(`[data-f="${f}"]`).value = r[f]); });
+}
+$('#rl-rows').addEventListener('input', e => {
+  const row = e.target.closest('.srow'); if (!row) return; const r = rl.rules[+row.dataset.i], f = e.target.dataset.f;
+  if (['name', 'ports', 'src', 'dst'].includes(f)){ r[f] = e.target.value; if (f === 'ports' && r.service !== 'custom'){ r.service = 'custom'; row.querySelector('[data-f="service"]').value = 'custom'; } rlRender(); }
+});
+$('#rl-rows').addEventListener('change', e => {
+  const row = e.target.closest('.srow'); if (!row) return; const r = rl.rules[+row.dataset.i], f = e.target.dataset.f;
+  if (f === 'service'){ r.service = e.target.value; const s = SERVICES[r.service]; if (s.proto){ r.proto = s.proto; r.ports = s.ports; } rlRenderRows(); rlRender(); }
+  else if (f === 'proto'){ r.proto = e.target.value; if (r.service !== 'custom'){ r.service = 'custom'; } rlRenderRows(); rlRender(); }
+  else if (f === 'action'){ r.action = e.target.value; rlRender(); }
+});
+$('#rl-rows').addEventListener('click', e => { const b = e.target.closest('[data-rm]'); if (!b) return; rl.rules.splice(+b.dataset.rm, 1); rlRenderRows(); rlRender(); });
+$('#rl-add').addEventListener('click', () => { rl.rules.push({ name:'rule-' + (rl.rules.length + 1), service:'https', proto:'tcp', ports:'443', src:'', dst:'Any', action:'allow' }); rlRenderRows(); rlRender(); });
+
+function rlAddr(s, names){
+  const t = String(s || '').trim();
+  if (!t || /^(any|\*)$/i.test(t)) return { kind:'any', text:'anywhere' };
+  if (/^internet$/i.test(t)) return { kind:'internet', text:'the internet' };
+  const x = parseAny(t), c = cidrAny(x.start, x.p, x.v), nm = names[c];
+  return { kind:'cidr', cidr:c, v:x.v, text: nm ? `${c} (${esc(nm)})` : c };
+}
+function rlPorts(proto, s){
+  if (proto === 'icmp' || proto === 'any') return null;
+  const t = String(s || '').trim();
+  if (!t || t === '*') return [[1, 65535]];
+  return t.split(/[\s,]+/).filter(Boolean).map(x => {
+    const m = x.match(/^(\d+)(?:-(\d+))?$/); if (!m) throw new Error(`"${x}" is not a port or range`);
+    const a = +m[1], b = m[2] ? +m[2] : a; if (a < 1 || b > 65535 || a > b) throw new Error('Ports must be between 1 and 65535');
+    return [a, b];
+  });
+}
+function portText(pr){
+  if (!pr) return '';
+  if (pr.length === 1 && pr[0][0] === 1 && pr[0][1] === 65535) return 'on all ports';
+  const one = ([a, b]) => a === b ? `${a}${PORT_NAMES[a] ? ' (' + PORT_NAMES[a] + ')' : ''}` : `${a}–${b}`;
+  return (pr.length === 1 && pr[0][0] === pr[0][1] ? 'on port ' : 'on ports ') + pr.map(one).join(', ');
+}
+function rlEval(){
+  const names = {}; knownRanges().forEach(k => { if (!names[k.cidr]) names[k.cidr] = k.name; });
+  return rl.rules.map((r, i) => {
+    const o = { r, i, notes:[], ok:true };
+    try {
+      o.src = rlAddr(r.src, names); o.dst = rlAddr(r.dst, names); o.ports = rlPorts(r.proto, r.ports);
+      const pt = r.proto === 'any' ? 'all traffic' : r.proto === 'icmp' ? 'ping (ICMP)' : `${r.proto.toUpperCase()} ${portText(o.ports)}`;
+      o.text = `${r.action === 'allow' ? 'Allows' : 'Blocks'} ${pt} from ${o.src.text} to ${o.dst.text}.`;
+      const open = o.src.kind !== 'cidr';
+      const hits = p => !o.ports ? r.proto === 'any' : o.ports.some(([a, b]) => a <= p && p <= b);
+      if (r.action === 'allow' && open && (hits(22) || hits(3389))) o.notes.push(['err', 'Management port open to the internet', 'Opening SSH or Remote Desktop to the whole internet is the most common way servers get broken into. Use Azure Bastion, AWS Systems Manager Session Manager or Google Identity-Aware Proxy instead, or limit the source to your office IP.']);
+      if (r.action === 'allow' && open && [1433, 5432, 3306, 6379].some(hits)) o.notes.push(['err', 'Database open to the internet', 'Databases should only be reachable from your application subnets, never directly from the internet.']);
+      if (r.action === 'allow' && open && o.dst.kind === 'any' && (r.proto === 'any' || (o.ports && o.ports.some(([a, b]) => b - a > 1000)))) o.notes.push(['warn', 'Very broad rule', 'This lets almost anything in. Narrow the source, destination or ports to just what is needed.']);
+      if (rl.cloud === 'aws' && r.action === 'deny') o.notes.push(['info', 'Becomes a network ACL entry', 'AWS security groups can only allow traffic, so this block rule is generated as a network ACL entry instead. Network ACLs apply to a whole subnet and are checked before security groups.']);
+      if (rl.cloud === 'aws' && r.action === 'allow' && o.dst.kind === 'cidr') o.notes.push(['info', 'Destination is documentation in AWS', 'In AWS the destination is simply whatever the security group is attached to, so the destination column is not part of the command.']);
+    } catch(e){ o.ok = false; o.notes.push(['err', e.message, 'Fix this field to include the rule in the generated code.']); }
+    return o;
+  });
+}
+function rlRender(){
+  rlSave();
+  const k = knownRanges();
+  $('#rl-known').innerHTML = ['<option value="Internet">Any public internet address</option>', '<option value="Any">Any address at all</option>', ...k.map(x => `<option value="${x.cidr}">${esc(x.name)}</option>`)].join('');
+  const ev = rlEval();
+  ev.forEach(o => {
+    const n = document.querySelector(`[data-rl-notes="${o.i}"]`), x = document.querySelector(`[data-rl-exp="${o.i}"]`);
+    if (n) n.innerHTML = o.notes.map(([c, m]) => `<span class="tag ${c}">${esc(m)}</span>`).join('');
+    if (x) x.innerHTML = [o.text || '', ...o.notes.map(t => t[2])].filter(Boolean).join(' ');
+  });
+  const CLOUD_EXP = {
+    azure: 'An Azure NSG checks rules from the lowest priority number up and stops at the first match. The rules below get priorities 100, 110, 120 and so on, in your order. Built-in rules at the end already allow traffic inside the VNet and block everything else coming in from the internet. Attach the NSG to a subnet (or a network interface) for it to take effect.',
+    aws: 'An AWS security group is a list of allow rules attached to instances, load balancers or databases; anything not allowed is blocked. There is no priority because every rule is an allow. To actively block something, AWS uses network ACLs on the subnet, so block rules are generated as ACL entries. Network ACLs are not stateful, so allowing traffic through one also needs a matching outbound rule.',
+    gcp: 'Google Cloud firewall rules belong to the whole VPC network. Lower priority numbers win; the rules below get 1000, 1010, 1020 and so on. Every network has hidden rules that block all incoming traffic and allow all outgoing traffic, so you only add what should come in. Rules can be narrowed to specific VMs with network tags.'
+  };
+  $('#rl-cloud-exp').innerHTML = CLOUD_EXP[rl.cloud];
+  const good = ev.filter(o => o.ok);
+  const nm = s => String(s || 'rule').replace(/[^A-Za-z0-9_.-]/g, '-');
+  const gn = s => { let x = String(s || 'rule').toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/^[^a-z]+/, ''); return (x || 'rule').slice(0, 62).replace(/-+$/, '') || 'rule'; };
+  let out = '';
+  if (rl.cloud === 'azure'){
+    const rg = rl.rg || 'my-rg', nsg = rl.nsg || 'my-nsg';
+    out = `# Create the network security group (skip if it already exists)\naz network nsg create --resource-group ${rg} --name ${nsg}\n`;
+    good.forEach((o, i) => {
+      const a = x => x.kind === 'any' ? "'*'" : x.kind === 'internet' ? 'Internet' : x.cidr;
+      const proto = { tcp:'Tcp', udp:'Udp', icmp:'Icmp', any:"'*'" }[o.r.proto];
+      const ports = !o.ports || (o.ports.length === 1 && o.ports[0][0] === 1 && o.ports[0][1] === 65535) ? "'*'" : o.ports.map(([x, y]) => x === y ? x : `${x}-${y}`).join(' ');
+      out += `\n# ${o.text.replace(/<[^>]+>/g, '')}\naz network nsg rule create --resource-group ${rg} --nsg-name ${nsg} \\\n  --name ${nm(o.r.name)} --priority ${100 + i * 10} --direction Inbound --access ${o.r.action === 'allow' ? 'Allow' : 'Deny'} \\\n  --protocol ${proto} --source-address-prefixes ${a(o.src)} --source-port-ranges '*' \\\n  --destination-address-prefixes ${a(o.dst)} --destination-port-ranges ${ports}\n`;
+    });
+    out += `\n# Attach the NSG to a subnet so it takes effect\n# az network vnet subnet update --resource-group ${rg} --vnet-name MY-VNET --name MY-SUBNET --network-security-group ${nsg}\n`;
+  } else if (rl.cloud === 'aws'){
+    const sg = rl.sg || 'sg-xxxxxxxx', acl = rl.nacl || 'acl-xxxxxxxx';
+    let n = 100;
+    good.forEach(o => {
+      const src = o.src.kind === 'cidr' ? o.src : { cidr:'0.0.0.0/0', v:4 };
+      const rng = src.v === 6 ? `Ipv6Ranges=[{CidrIpv6=${src.cidr},Description="${nm(o.r.name)}"}]` : `IpRanges=[{CidrIp=${src.cidr},Description="${nm(o.r.name)}"}]`;
+      out += `\n# ${o.text.replace(/<[^>]+>/g, '')}\n`;
+      if (o.r.action === 'allow'){
+        if (o.r.proto === 'any') out += `aws ec2 authorize-security-group-ingress --group-id ${sg} \\\n  --ip-permissions 'IpProtocol=-1,${rng}'\n`;
+        else if (o.r.proto === 'icmp') out += `aws ec2 authorize-security-group-ingress --group-id ${sg} \\\n  --ip-permissions 'IpProtocol=icmp,FromPort=-1,ToPort=-1,${rng}'\n`;
+        else o.ports.forEach(([a, b]) => { out += `aws ec2 authorize-security-group-ingress --group-id ${sg} \\\n  --ip-permissions 'IpProtocol=${o.r.proto},FromPort=${a},ToPort=${b},${rng}'\n`; });
+      } else {
+        const pnum = { tcp:6, udp:17, icmp:1, any:-1 }[o.r.proto];
+        const cidrFlag = src.v === 6 ? `--ipv6-cidr-block ${src.cidr}` : `--cidr-block ${src.cidr}`;
+        const ranges = o.ports || [null];
+        ranges.forEach(pr => {
+          out += `aws ec2 create-network-acl-entry --network-acl-id ${acl} --ingress \\\n  --rule-number ${n} --protocol ${pnum} ${pr ? `--port-range From=${pr[0]},To=${pr[1]} ` : ''}${o.r.proto === 'icmp' ? '--icmp-type-code Type=-1,Code=-1 ' : ''}${cidrFlag} --rule-action deny\n`;
+          n += 10;
+        });
+      }
+    });
+    if (good.some(o => o.r.action === 'deny')) out += `\n# Network ACL entries are checked in rule-number order, so keep these lower than your allow entries.\n`;
+  } else {
+    const net = rl.network || 'my-network';
+    good.forEach((o, i) => {
+      const rules = o.r.proto === 'any' ? 'all' : o.r.proto === 'icmp' ? 'icmp' : o.ports.map(([a, b]) => `${o.r.proto}:${a === 1 && b === 65535 ? '0-65535' : a === b ? a : a + '-' + b}`).join(',');
+      const src = o.src.kind === 'cidr' ? o.src.cidr : '0.0.0.0/0';
+      out += `\n# ${o.text.replace(/<[^>]+>/g, '')}\ngcloud compute firewall-rules create ${gn(o.r.name)} \\\n  --network=${net} --direction=INGRESS --priority=${1000 + i * 10} --action=${o.r.action === 'allow' ? 'ALLOW' : 'DENY'} \\\n  --rules=${rules} --source-ranges=${src}${o.dst.kind === 'cidr' ? ` \\\n  --destination-ranges=${o.dst.cidr}` : ''}\n`;
+    });
+  }
+  const skipped = ev.length - good.length;
+  if (skipped) out = `# ${skipped} rule(s) left out because of errors above\n` + out;
+  $('#rl-code').textContent = out.replace(/^\n/, '');
+  const CODE_EXP = {
+    azure: 'Run these with the Azure CLI, in Cloud Shell or after <code>az login</code>. The comment above each command says in plain words what it does. Uncomment the last line and fill in your VNet and subnet names to attach the NSG.',
+    aws: 'Run these with the AWS CLI, in CloudShell or after <code>aws configure</code>. Replace the security group and network ACL IDs with yours (find them in the VPC console). Internet and Any both become 0.0.0.0/0; add a second rule with ::/0 if you also use IPv6.',
+    gcp: 'Run these with the gcloud CLI, in Cloud Shell or after <code>gcloud auth login</code>. Rule names are converted to lowercase with hyphens, as Google Cloud requires. Add <code>--target-tags=web</code> to apply a rule only to VMs with that tag.'
+  };
+  $('#rl-code-explain').innerHTML = CODE_EXP[rl.cloud];
+}
+document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => { if (t.dataset.tab === 'rules') rlRender(); }));
+
+/* ---------- save / load ---------- */
+function exportState(){
+  return { app:'subnet-planner', version:1, exported:new Date().toISOString(),
+    calc:$('#calc-in').value, v6:$('#v6-in').value, azure:st, aws:aw, gcp:gc, org, rules:rl,
+    overlap:$('#ov-in').value, summarize:$('#sum-in').value, inrange:{ ips:$('#ir-ips').value, ranges:$('#ir-ranges').value } };
+}
+function importState(o){
+  if (!o || o.app !== 'subnet-planner') throw new Error('This is not a plan file from this tool.');
+  if (typeof o.calc === 'string') $('#calc-in').value = o.calc;
+  if (typeof o.v6 === 'string') $('#v6-in').value = o.v6;
+  if (o.azure && Array.isArray(o.azure.subnets)) st = o.azure;
+  if (o.aws && Array.isArray(o.aws.tiers)) aw = o.aws;
+  if (o.gcp && Array.isArray(o.gcp.subnets)) gc = o.gcp;
+  if (o.org && Array.isArray(o.org.blocks)) org = o.org;
+  if (o.rules && Array.isArray(o.rules.rules)) rl = o.rules;
+  if (typeof o.overlap === 'string') $('#ov-in').value = o.overlap;
+  if (typeof o.summarize === 'string') $('#sum-in').value = o.summarize;
+  if (o.inrange){ if (typeof o.inrange.ips === 'string') $('#ir-ips').value = o.inrange.ips; if (typeof o.inrange.ranges === 'string') $('#ir-ranges').value = o.inrange.ranges; }
+  renderAll();
+}
+function svMsg(t){ $('#sv-msg').textContent = t; setTimeout(() => { if ($('#sv-msg').textContent === t) $('#sv-msg').textContent = ''; }, 4000); }
+$('#sv-download').addEventListener('click', () => {
+  try {
+    const blob = new Blob([JSON.stringify(exportState(), null, 2)], { type:'application/json' });
+    const url = URL.createObjectURL(blob), a = document.createElement('a');
+    a.href = url; a.download = 'network-plan.json';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    svMsg('Plan file download started. If nothing happens, use Copy plan as text instead.');
+  } catch(e){ svMsg('Download is not available here. Use Copy plan as text instead.'); }
+});
+$('#sv-copy').addEventListener('click', async () => {
+  const txt = JSON.stringify(exportState(), null, 2);
+  try { await navigator.clipboard.writeText(txt); svMsg('Copied. Paste it into a text file or a message to keep or share it.'); }
+  catch(e){ $('#ld-text').value = txt; $('#ld-text').select(); svMsg('Copying is blocked here, so the plan text is in the box below, selected. Press Ctrl+C / ⌘C to copy it.'); }
+});
+function ldMsg(ok, t){ $('#ld-msg').innerHTML = `<ul class="msgs"><li class="${ok ? '' : 'err'}" style="${ok ? 'background:var(--ok-soft);color:var(--ok)' : ''}">${esc(t)}</li></ul>`; }
+function loadText(txt){
+  try { importState(JSON.parse(txt)); ldMsg(true, 'Plan loaded. Every tab now shows the loaded plan.'); }
+  catch(e){ ldMsg(false, e instanceof SyntaxError ? 'That text is not valid plan data. Make sure you copied all of it, from the first { to the last }.' : e.message); }
+}
+$('#ld-apply').addEventListener('click', () => loadText($('#ld-text').value));
+$('#ld-file').addEventListener('change', e => {
+  const f = e.target.files && e.target.files[0]; if (!f) return;
+  const rd = new FileReader();
+  rd.onload = () => loadText(String(rd.result));
+  rd.onerror = () => ldMsg(false, 'The file could not be read. Open it in a text editor and paste its contents instead.');
+  rd.readAsText(f); e.target.value = '';
+});
+
+function renderAll(){
+  renderCalc(); renderV6();
+  orgSyncTop(); orgRenderRows(); orgPlan();
+  syncTop(); renderRows(); plan(); checkOverlap();
+  awsSyncTop(); awsRenderRows(); awsPlan();
+  gcSyncTop(); gcRenderRows(); gcPlan();
+  renderSum(); renderIR();
+  rlSyncTop(); rlRenderRows(); rlRender();
+}
+
+/* ---------- init ---------- */
+renderAll();
+</script>
+</body>
+</html>
