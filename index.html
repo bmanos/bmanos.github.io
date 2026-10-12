@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Emmanuel Bairaktaris — IT & Security Projects</title>
-<meta name="description" content="Open-source IT and network-security projects: a network security assessment roadmap and a subnet calculator with cloud network planners.">
+<meta name="description" content="Open-source IT and network-security projects: a network security assessment roadmap, a subnet calculator with cloud network planners, an IP intelligence console, and a visual walkthrough of a private cloud platform.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -16,6 +16,7 @@
     --sec:#A63C29; --sec-bg:#F7E7E2; --sec-line:#E7C3B8;
     --net:#245C8C; --net-bg:#E4EDF4; --net-line:#B9D0E1;
     --con:#0E7C94; --con-bg:#DEF0F4; --con-line:#AFD8E1;
+    --inf:#4C4FA6; --inf-bg:#E6E7F4; --inf-line:#C3C5E6;
     --r:12px; --maxw:960px;
     box-sizing:border-box;
     padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
@@ -40,27 +41,28 @@
   /* project grid */
   .projects{padding:48px 0 16px}
   .eyebrow{font-family:"IBM Plex Mono",monospace;font-size:.72rem;letter-spacing:.06em;color:var(--muted);text-transform:uppercase;margin:0 0 20px}
-  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
-  @media (max-width:1000px){.grid{grid-template-columns:repeat(2,1fr)}}
+  .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:22px}
   @media (max-width:680px){.grid{grid-template-columns:1fr}}
   .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:28px;display:flex;flex-direction:column;transition:box-shadow .18s,transform .18s,border-color .18s}
   .card:hover{box-shadow:0 12px 30px -16px rgba(20,32,46,.45);transform:translateY(-3px)}
-  .card.net:hover{border-color:var(--net-line)} .card.sec:hover{border-color:var(--sec-line)} .card.con:hover{border-color:var(--con-line)}
+  .card.net:hover{border-color:var(--net-line)} .card.sec:hover{border-color:var(--sec-line)} .card.con:hover{border-color:var(--con-line)} .card.inf:hover{border-color:var(--inf-line)}
   .badge{align-self:flex-start;font-family:"IBM Plex Mono",monospace;font-size:.68rem;letter-spacing:.05em;text-transform:uppercase;padding:5px 11px;border-radius:30px;margin-bottom:18px}
   .sec .badge{background:var(--sec-bg);color:var(--sec);border:1px solid var(--sec-line)}
   .net .badge{background:var(--net-bg);color:var(--net);border:1px solid var(--net-line)}
   .con .badge{background:var(--con-bg);color:var(--con);border:1px solid var(--con-line)}
+  .inf .badge{background:var(--inf-bg);color:var(--inf);border:1px solid var(--inf-line)}
   .card h2{font-family:"Space Grotesk",sans-serif;font-weight:700;font-size:1.4rem;letter-spacing:-.01em;margin:0 0 10px;color:var(--text)}
   .card p{margin:0 0 18px;color:var(--text)}
   .feat{list-style:none;padding:0;margin:0 0 24px;font-size:.92rem}
   .feat li{position:relative;padding-left:22px;margin-bottom:7px;color:var(--muted)}
   .feat li::before{content:"";position:absolute;left:4px;top:.6em;width:7px;height:7px;border-radius:2px}
-  .sec .feat li::before{background:var(--sec)} .net .feat li::before{background:var(--net)} .con .feat li::before{background:var(--con)}
+  .sec .feat li::before{background:var(--sec)} .net .feat li::before{background:var(--net)} .con .feat li::before{background:var(--con)} .inf .feat li::before{background:var(--inf)}
   .actions{margin-top:auto;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
   .btn{display:inline-flex;align-items:center;gap:8px;font-family:"IBM Plex Sans",sans-serif;font-weight:600;font-size:.9rem;padding:10px 18px;border-radius:8px;border:1px solid transparent;transition:background .15s,border-color .15s,color .15s}
   .sec .btn.primary{background:var(--sec);color:#fff} .sec .btn.primary:hover{background:#8f3122}
   .net .btn.primary{background:var(--net);color:#fff} .net .btn.primary:hover{background:var(--link-hover)}
   .con .btn.primary{background:var(--con);color:#fff} .con .btn.primary:hover{background:#0a5d6f}
+  .inf .btn.primary{background:var(--inf);color:#fff} .inf .btn.primary:hover{background:#3a3c86}
   .btn.ghost{border-color:var(--line);color:var(--text)} .btn.ghost:hover{border-color:#b7c3cf;background:#f4f7fa}
   .btn.ghost::before{content:"↓";font-family:"IBM Plex Mono",monospace}
 
@@ -132,6 +134,21 @@
           </ul>
           <div class="actions">
             <a class="btn primary" href="ip-console.html">Open console</a>
+          </div>
+        </article>
+
+        <article class="card inf">
+          <span class="badge">Case study · Cloud architecture</span>
+          <h2>Private Cloud Platform — Visual Walkthrough</h2>
+          <p>How a full on-premises private cloud fits together — Canonical OpenStack, Kubernetes, MAAS/Juju, Ceph and NVIDIA GPUs — explained as an interactive building you read layer by layer.</p>
+          <ul class="feat">
+            <li>Click-through building: every tool as a labelled layer</li>
+            <li>Diagrams for build order, security, monitoring and GPUs</li>
+            <li>Each tool's role in plain language, and how they connect</li>
+            <li>Terraform vs Ansible vs Juju, plus the day-to-day ops loop</li>
+          </ul>
+          <div class="actions">
+            <a class="btn primary" href="private-cloud-explained.html">Open walkthrough</a>
           </div>
         </article>
 
