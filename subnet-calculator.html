@@ -34,7 +34,7 @@
 }
 *,*::before,*::after{box-sizing:inherit}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5;-webkit-text-size-adjust:100%;text-size-adjust:100%}
 .wrap{max-width:1120px;margin:0 auto;padding:28px 20px 60px}
 header h1{font-size:clamp(1.5rem,3.2vw,2.1rem);font-weight:700;letter-spacing:-.02em;margin:0 0 4px}
 header p{margin:0;color:var(--muted);max-width:68ch}
@@ -63,7 +63,7 @@ textarea{min-height:110px;resize:vertical}
 .cell{background:var(--panel);padding:10px 14px}
 .cell .k{font-size:12.5px;color:var(--muted)}
 .cell .v{font-family:var(--mono);font-size:15.5px;font-weight:500;word-break:break-all}
-.ruler{margin-top:18px;overflow-x:auto}
+.ruler{margin-top:18px;overflow-x:auto;-webkit-overflow-scrolling:touch}
 .bits{display:flex;gap:10px;font-family:var(--mono);font-size:15px;white-space:nowrap}
 .oct{display:flex;gap:1px}
 .bit{width:17px;text-align:center;padding:4px 0;border-radius:3px}
@@ -72,7 +72,7 @@ textarea{min-height:110px;resize:vertical}
 .bitlabel{font-size:12.5px;color:var(--muted);margin:6px 0 2px}
 .legend{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--muted);margin-top:8px}
 .sw{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-2px;margin-right:5px}
-.tablewrap{overflow-x:auto;margin-top:10px;border:1px solid var(--line);border-radius:8px}
+.tablewrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin-top:10px;border:1px solid var(--line);border-radius:8px}
 table{border-collapse:collapse;width:100%;font-size:14px}
 th,td{padding:7px 12px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
 th{background:var(--panel2);font-weight:600;font-size:13px;color:var(--muted)}
@@ -131,6 +131,28 @@ label.beginner-toggle input{width:18px;height:18px;margin:0}
 .rl-notes{grid-column:1/-1}
 .sumgroup{margin-bottom:10px}
 .sumgroup b{display:inline-block;min-width:150px;font-size:14px}
+@media (max-width:560px){
+  .wrap{padding:20px 14px 46px}
+  input,select,textarea{font-size:16px}
+  .big-in{font-size:17px}
+  .theme-toggle{float:none;display:inline-block;margin:0 0 14px}
+  .row{grid-template-columns:1fr}
+  .grid-out{grid-template-columns:1fr}
+  .subrows .srow,#gc-rows .srow,#rl-rows .srow,#org-rows .srow{grid-template-columns:1fr;gap:10px;padding:14px 0}
+  .subrows .srow .rm{grid-column:auto}
+  .subrows .srow .rm .btn{width:100%}
+  .stats{gap:14px 18px}
+  .stat .n{font-size:1.15rem}
+  .bits{font-size:12px;gap:6px}
+  .bit{width:13px}
+  .subtabs{flex-wrap:wrap}
+  .tool-grid{grid-template-columns:1fr}
+  pre{font-size:12.5px;padding:12px}
+  .map{height:40px}
+  .seg{font-size:10.5px}
+  details.explain p,details.explain li{max-width:none}
+  .cell .v{font-size:15px}
+}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
