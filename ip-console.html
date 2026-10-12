@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>signal·trace — IP Intelligence Console</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0A0F1A; --panel:#0F1826; --panel2:#131F30; --border:#1F2E44;
+    --text:#DCE3ED; --muted:#7286A0; --dim:#4A5A72; --inputbg:#0A121F;
+    --land:#132436; --landstroke:#1E3452; --mapbg:#08101C; --gridline:#1F2E44;
+    --cyan:#4CC9F0; --amber:#F4A340; --red:#EF5D6B; --green:#57D9A3; --violet:#8B93F0;
+    --onaccent:#04121C; --halo:.10; --halo2:.07;
+    --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+    --disp:'Space Grotesk',system-ui,sans-serif;
+    --sans:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+    box-sizing:border-box;
+    padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+  }
+  :root[data-theme="light"]{
+    --bg:#EEF2F7; --panel:#FFFFFF; --panel2:#F4F7FA; --border:#D3DCE6;
+    --text:#172234; --muted:#5B6B80; --dim:#93A2B5; --inputbg:#F4F7FA;
+    --land:#DCE6F0; --landstroke:#C2D1E2; --mapbg:#E7EDF4; --gridline:#DCE3EB;
+    --cyan:#0E86B8; --amber:#C7751A; --red:#CC3344; --green:#1E9E73; --violet:#5A62D0;
+    --onaccent:#FFFFFF; --halo:.05; --halo2:.04;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    background:var(--bg); color:var(--text); font-family:var(--sans);
+    background-image:
+      linear-gradient(var(--gridline) 1px,transparent 1px),
+      linear-gradient(90deg,var(--gridline) 1px,transparent 1px);
+    background-size:44px 44px; background-position:center;
+    -webkit-font-smoothing:antialiased;-webkit-text-size-adjust:100%;text-size-adjust:100%;
+    transition:background-color .2s,color .2s;
+  }
+  body::before{content:"";position:fixed;inset:0;background:
+    radial-gradient(1200px 600px at 70% -10%,rgba(76,201,240,var(--halo)),transparent 60%),
+    radial-gradient(900px 500px at 0% 110%,rgba(244,163,64,var(--halo2)),transparent 55%);
+    pointer-events:none;z-index:0}
+  .wrap{position:relative;z-index:1;max-width:1000px;margin:0 auto;padding:26px 18px 60px}
+
+  header{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:4px}
+  .brand{font-family:var(--disp);font-weight:700;font-size:26px;letter-spacing:-.5px}
+  .brand .dot{color:var(--cyan)}
+  .tag{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase}
+  .sub{color:var(--muted);font-size:13.5px;margin:8px 0 22px;max-width:62ch}
+
+  .tabs{display:flex;gap:2px;background:var(--panel);border:1px solid var(--border);
+    border-radius:12px;padding:5px;margin-bottom:20px;overflow:hidden}
+  .tab{flex:1;min-width:0;appearance:none;border:0;background:transparent;color:var(--muted);
+    font-family:var(--disp);font-weight:600;font-size:13.5px;padding:11px 8px;border-radius:8px;
+    cursor:pointer;transition:.18s;position:relative;white-space:nowrap}
+  .tab:hover{color:var(--text)}
+  .tab.on{background:var(--panel2);color:var(--text)}
+  .tab.on::after{content:"";position:absolute;left:14px;right:14px;bottom:5px;height:2px;
+    background:linear-gradient(90deg,var(--cyan),var(--violet));border-radius:2px}
+  .tab .k{font-family:var(--mono);font-size:10px;color:var(--dim);display:block;font-weight:400;margin-top:1px}
+
+  .panel{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:18px}
+  .row{display:flex;gap:10px;flex-wrap:wrap}
+  input[type=text],textarea{
+    flex:1;min-width:160px;background:var(--inputbg);border:1px solid var(--border);color:var(--text);
+    font-family:var(--mono);font-size:15px;padding:13px 14px;border-radius:10px;outline:none;transition:.15s}
+  input::placeholder,textarea::placeholder{color:var(--dim)}
+  input:focus,textarea:focus{border-color:var(--cyan);box-shadow:0 0 0 3px rgba(76,201,240,.14)}
+  textarea{resize:vertical;min-height:120px;line-height:1.5;width:100%}
+  button.act{font-family:var(--disp);font-weight:600;font-size:14px;padding:13px 20px;border-radius:10px;
+    border:1px solid transparent;cursor:pointer;transition:.15s;white-space:nowrap}
+  .primary{background:var(--cyan);color:var(--onaccent)}
+  .primary:hover{background:#6fd6f6}
+  .ghost{background:transparent;border-color:var(--border);color:var(--muted)}
+  .ghost:hover{color:var(--text);border-color:var(--dim)}
+  button:disabled{opacity:.5;cursor:not-allowed}
+  .hint{font-size:12px;color:var(--dim);margin-top:10px;font-family:var(--mono)}
+
+  .out{margin-top:20px}
+  .msg{font-family:var(--mono);font-size:13px;padding:14px;border-radius:10px;border:1px solid var(--border)}
+  .msg.err{color:var(--red);border-color:rgba(239,93,107,.4);background:rgba(239,93,107,.07)}
+  .msg.load{color:var(--cyan)}
+  .msg.load::after{content:"";display:inline-block;width:7px;height:7px;margin-left:8px;border-radius:50%;
+    background:var(--cyan);animation:blink 1s steps(2) infinite}
+  @keyframes blink{50%{opacity:.2}}
+
+  /* dossier card */
+  .card{background:var(--panel2);border:1px solid var(--border);border-radius:14px;overflow:hidden}
+  .card .top{display:flex;align-items:center;gap:14px;padding:18px;border-bottom:1px solid var(--border);flex-wrap:wrap}
+  .flag{font-size:34px;line-height:1}
+  .ipbig{font-family:var(--mono);font-size:22px;font-weight:700;letter-spacing:.5px}
+  .place{color:var(--muted);font-size:13.5px;margin-top:2px}
+  .badge{margin-left:auto;font-family:var(--mono);font-size:11px;padding:5px 10px;border-radius:20px;
+    border:1px solid var(--border);color:var(--muted);letter-spacing:1px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:1px;background:var(--border)}
+  .cell{background:var(--panel2);padding:14px 16px}
+  .cell .lab{font-family:var(--mono);font-size:10.5px;color:var(--dim);letter-spacing:1.4px;text-transform:uppercase}
+  .cell .val{font-family:var(--mono);font-size:14px;margin-top:5px;word-break:break-word;color:var(--text)}
+  .cell .val.sm{font-size:12.5px}
+  .maplink{display:inline-block;margin-top:6px;color:var(--cyan);font-family:var(--mono);font-size:12px;text-decoration:none}
+  .maplink:hover{text-decoration:underline}
+
+  /* chips */
+  .chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
+  .chip{font-family:var(--mono);font-size:11.5px;padding:5px 11px;border-radius:20px;border:1px solid var(--border);color:var(--muted)}
+  .chip.on{color:var(--text)}
+  .verdict{display:flex;align-items:center;gap:12px;padding:16px 18px}
+  .vdot{width:12px;height:12px;border-radius:50%;flex:none}
+  .vtext{font-family:var(--disp);font-weight:600;font-size:17px}
+  .vsub{color:var(--muted);font-size:12.5px;font-family:var(--mono)}
+  .k-res{color:var(--green)} .k-host{color:var(--amber)} .k-vpn{color:var(--violet)} .k-unk{color:var(--muted)}
+  .b-res{background:var(--green)} .b-host{background:var(--amber)} .b-vpn{background:var(--violet)} .b-unk{background:var(--dim)}
+
+  /* table */
+  .tblwrap{overflow:auto;border:1px solid var(--border);border-radius:12px;margin-top:16px}
+  table{border-collapse:collapse;width:100%;font-family:var(--mono);font-size:12.5px}
+  th{position:sticky;top:0;background:var(--panel2);color:var(--dim);text-align:left;font-weight:500;
+    padding:11px 13px;letter-spacing:1px;text-transform:uppercase;font-size:10.5px;border-bottom:1px solid var(--border);cursor:pointer;white-space:nowrap}
+  th:hover{color:var(--text)}
+  td{padding:10px 13px;border-bottom:1px solid var(--border);white-space:nowrap}
+  tr:last-child td{border-bottom:0}
+  tr:hover td{background:rgba(76,201,240,.04)}
+  td.bad{color:var(--red)}
+  .barrow{display:flex;justify-content:space-between;align-items:center;margin-top:16px;flex-wrap:wrap;gap:10px}
+  .count{font-family:var(--mono);font-size:12px;color:var(--muted)}
+
+  /* map */
+  .mapbox{margin-top:16px;border:1px solid var(--border);border-radius:12px;background:var(--mapbg);overflow:hidden}
+  svg.world{display:block;width:100%;height:auto}
+  .grat{stroke:var(--border);stroke-width:.5;fill:none}
+  .land{fill:var(--land);stroke:var(--landstroke);stroke-width:.6}
+  .link{stroke:var(--cyan);stroke-width:1;stroke-dasharray:3 3;fill:none;opacity:.5}
+  .ping{fill:var(--amber)}
+  .ping-halo{fill:none;stroke:var(--amber);stroke-width:1.5;opacity:.9;transform-box:fill-box;transform-origin:center}
+  .plabel{font-family:var(--mono);font-size:9px;fill:var(--text)}
+  .legend{padding:12px 16px;display:flex;gap:16px;flex-wrap:wrap;font-family:var(--mono);font-size:11px;color:var(--muted)}
+  @keyframes halo{0%{r:4;opacity:.9}100%{r:18;opacity:0}}
+
+  .foot{margin-top:26px;font-family:var(--mono);font-size:11px;color:var(--dim);line-height:1.7}
+  .foot b{color:var(--muted);font-weight:500}
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+  .homelink{font-family:var(--mono);font-size:12.5px;color:var(--cyan);text-decoration:none;letter-spacing:.3px}
+  .homelink:hover{text-decoration:underline}
+  .themebtn{appearance:none;background:var(--panel);border:1px solid var(--border);color:var(--muted);
+    font-family:var(--disp);font-weight:600;font-size:12.5px;padding:7px 13px;border-radius:8px;cursor:pointer;transition:.15s}
+  .themebtn:hover{color:var(--text);border-color:var(--dim)}
+  :focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+
+  @media(max-width:560px){
+    .wrap{padding:18px 13px 48px}
+    .brand{font-size:21px}.tab .k{display:none}.ipbig{font-size:17px}
+    .tabs{gap:2px;padding:4px}
+    .tab{font-size:12.5px;padding:10px 5px}
+    .row{flex-direction:column}
+    .row input[type=text]{min-width:0;width:100%}
+    .row button.act{width:100%}
+    .count{align-self:flex-start!important}
+    .grid{grid-template-columns:1fr}
+    .top .badge{margin-left:0}
+    .card .top{gap:10px}
+    th,td{padding:9px 10px}
+    .foot{font-size:10.5px}
+  }
+  @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <a class="homelink" href="./">← All projects</a>
+    <button class="themebtn" id="themeBtn" type="button" aria-label="Toggle light or dark theme">◐ Theme</button>
+  </div>
+  <header>
+    <div class="brand">signal<span class="dot">·</span>trace</div>
+    <div class="tag">ip intelligence console</div>
+  </header>
+  <div class="sub">Enter an address to resolve its location, network, and connection profile. Everything runs in your browser against free public sources — no keys, nothing stored.</div>
+
+  <div class="tabs" id="tabs">
+    <button class="tab on" data-mode="dossier">Dossier<span class="k">single ip</span></button>
+    <button class="tab" data-mode="bulk">Bulk<span class="k">list → csv</span></button>
+    <button class="tab" data-mode="security">Security<span class="k">is it a bot?</span></button>
+    <button class="tab" data-mode="map">Map<span class="k">plot points</span></button>
+  </div>
+
+  <!-- DOSSIER -->
+  <section class="panel" data-view="dossier">
+    <div class="row">
+      <input type="text" id="d-ip" placeholder="e.g. 8.8.8.8  ·  leave empty for your own IP" autocomplete="off">
+      <button class="act primary" id="d-go">Resolve</button>
+      <button class="act ghost" id="d-me">My IP</button>
+    </div>
+    <div class="hint">Full profile: geolocation, ISP/org, ASN, reverse DNS, timezone.</div>
+    <div class="out" id="d-out"></div>
+  </section>
+
+  <!-- BULK -->
+  <section class="panel" data-view="bulk" hidden>
+    <textarea id="b-in" placeholder="Paste IPs — one per line, or messy log text. IPv4 & IPv6 are auto-extracted.
+198.51.100.24
+203.0.113.7
+2606:4700:4700::1111"></textarea>
+    <div class="row" style="margin-top:12px">
+      <button class="act primary" id="b-go">Resolve list</button>
+      <button class="act ghost" id="b-csv" disabled>Export CSV</button>
+      <span class="count" id="b-count" style="align-self:center"></span>
+    </div>
+    <div class="hint">Capped at 50 IPs per run and throttled to stay within free rate limits.</div>
+    <div class="out" id="b-out"></div>
+  </section>
+
+  <!-- SECURITY -->
+  <section class="panel" data-view="security" hidden>
+    <div class="row">
+      <input type="text" id="s-ip" placeholder="e.g. 52.94.236.248" autocomplete="off">
+      <button class="act primary" id="s-go">Assess</button>
+    </div>
+    <div class="hint">Heuristic classification — residential vs. datacenter / hosting / likely VPN — from network ownership.</div>
+    <div class="out" id="s-out"></div>
+  </section>
+
+  <!-- MAP -->
+  <section class="panel" data-view="map" hidden>
+    <textarea id="m-in" placeholder="Paste a few IPs to plot on the world map.
+8.8.8.8
+1.1.1.1
+77.88.55.60"></textarea>
+    <div class="row" style="margin-top:12px">
+      <button class="act primary" id="m-go">Plot</button>
+    </div>
+    <div class="hint">Up to 25 points. Locations are ISP-level approximations.</div>
+    <div class="out" id="m-out"></div>
+  </section>
+
+  <div class="foot">
+    <b>How to read this:</b> geolocation is approximate — it reflects where a network is registered or hosted, usually the ISP or a datacenter, not a street address.<br>
+    <b>Identity:</b> a public lookup can't reveal a person. Names and subscriber addresses sit only with the ISP and are released only under legal process.<br>
+    <b>Masking:</b> VPNs, proxies and cloud hosting hide the true origin; the "Security" verdict is a best-effort guess, not proof.<br>
+    <b>Sources:</b> ipwho.is (geo/network) · dns.google DoH (reverse DNS) · Natural Earth via world-atlas (map).
+  </div>
+</div>
+
+<script>
+const cache = new Map();
+const $ = s => document.querySelector(s);
+
+/* ---------- theme ---------- */
+(function(){
+  try{ const t=localStorage.getItem('st.theme'); if(t) document.documentElement.dataset.theme=t; }catch(e){}
+})();
+function curTheme(){ return document.documentElement.dataset.theme || 'dark'; }
+$('#themeBtn').addEventListener('click',()=>{
+  const next = curTheme()==='dark' ? 'light' : 'dark';
+  document.documentElement.dataset.theme = next;
+  try{ localStorage.setItem('st.theme', next); }catch(e){}
+});
+
+/* ---------- tabs ---------- */
+$('#tabs').addEventListener('click', e => {
+  const b = e.target.closest('.tab'); if(!b) return;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on', t===b));
+  const m = b.dataset.mode;
+  document.querySelectorAll('[data-view]').forEach(v=>v.hidden = v.dataset.view!==m);
+});
+
+/* ---------- core lookup ---------- */
+async function resolve(ipRaw){
+  const ip = (ipRaw||'').trim();
+  const key = ip || '__self__';
+  if(cache.has(key)) return cache.get(key);
+  const res = await fetch('https://ipwho.is/' + encodeURIComponent(ip));
+  const d = await res.json();
+  if(!d || d.success===false) throw new Error(d && d.message ? d.message : 'Lookup failed');
+  const o = {
+    ip:d.ip, type:d.type, flag:(d.flag&&d.flag.emoji)||'🌐',
+    country:d.country, countryCode:d.country_code, region:d.region, city:d.city,
+    postal:d.postal, lat:d.latitude, lng:d.longitude, isEu:d.is_eu, continent:d.continent,
+    asn:d.connection&&d.connection.asn, org:d.connection&&d.connection.org,
+    isp:d.connection&&d.connection.isp, domain:d.connection&&d.connection.domain,
+    tzId:d.timezone&&d.timezone.id, tzUtc:d.timezone&&d.timezone.utc,
+    tzTime:d.timezone&&d.timezone.current_time
+  };
+  cache.set(key,o); if(ip) cache.set(ip,o);
+  return o;
+}
+
+async function reverseDNS(ip){
+  if(!ip || ip.includes(':')) return null; // IPv4 only
+  const parts = ip.split('.'); if(parts.length!==4) return null;
+  const name = parts.reverse().join('.') + '.in-addr.arpa';
+  try{
+    const r = await fetch('https://dns.google/resolve?name='+name+'&type=PTR');
+    const j = await r.json();
+    if(j.Answer && j.Answer.length){
+      return j.Answer.map(a=>a.data.replace(/\.$/,'')).filter(Boolean).join(', ');
+    }
+  }catch(e){}
+  return null;
+}
+
+/* ---------- security heuristic ---------- */
+const HOST = ['amazon','aws','ec2','google cloud','googleuser','microsoft','azure','digitalocean','ovh','linode','akamai','hetzner','vultr','contabo','oracle','alibaba','tencent','leaseweb','hosting','datacenter','data center','colo','dedicated','cloudflare','fastly','m247','choopa','constant','scaleway','upcloud','hostwinds','godaddy','namecheap',' llc','server'];
+const VPN = ['vpn','nordvpn','mullvad','proton','expressvpn','cyberghost','private internet','pia ','surfshark','ipvanish','windscribe','torguard','purevpn'];
+function classify(o){
+  const hay = ((o.org||'')+' '+(o.isp||'')+' '+(o.domain||'')).toLowerCase();
+  const reasons=[];
+  const vpnHit = VPN.filter(k=>hay.includes(k));
+  const hostHit = HOST.filter(k=>hay.includes(k));
+  if(vpnHit.length){reasons.push('Network name references a VPN provider');return{cat:'vpn',label:'Likely VPN / anonymizer',reasons};}
+  if(hostHit.length){reasons.push('Owned by a cloud / hosting network — traffic is likely automated or server-side, not a home user');return{cat:'host',label:'Datacenter / hosting',reasons};}
+  reasons.push('Network looks like a consumer ISP — consistent with a residential or mobile user');
+  return{cat:'res',label:'Likely residential / ISP',reasons};
+}
+
+/* ---------- render helpers ---------- */
+function cell(lab,val,cls){return `<div class="cell"><div class="lab">${lab}</div><div class="val ${cls||''}">${val==null||val===''?'—':val}</div></div>`;}
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function osm(o){return `https://www.openstreetmap.org/?mlat=${o.lat}&mlon=${o.lng}#map=8/${o.lat}/${o.lng}`;}
+
+function dossierCard(o,ptr){
+  return `<div class="card">
+    <div class="top">
+      <div class="flag">${o.flag}</div>
+      <div>
+        <div class="ipbig">${esc(o.ip)}</div>
+        <div class="place">${[o.city,o.region,o.country].filter(Boolean).map(esc).join(', ')||'Location unknown'}</div>
+      </div>
+      <div class="badge">${esc(o.type||'IP')}</div>
+    </div>
+    <div class="grid">
+      ${cell('Organization',esc(o.org||o.isp||''))}
+      ${cell('ISP',esc(o.isp||''))}
+      ${cell('ASN',esc(o.asn||''))}
+      ${cell('Reverse DNS',ptr?esc(ptr):'<span style="color:var(--dim)">none / not set</span>','sm')}
+      ${cell('Coordinates',(o.lat!=null?`${o.lat}, ${o.lng}`:'')+ (o.lat!=null?`<a class="maplink" href="${osm(o)}" target="_blank" rel="noopener">open in map ↗</a>`:''),'sm')}
+      ${cell('Postal',esc(o.postal||''))}
+      ${cell('Timezone',esc(o.tzId||'')+(o.tzUtc?` (UTC${esc(o.tzUtc)})`:''),'sm')}
+      ${cell('Local time',o.tzTime?esc(new Date(o.tzTime).toLocaleString()):'','sm')}
+      ${cell('Continent',esc(o.continent||'')+(o.isEu?' · EU':''))}
+      ${cell('Connection domain',esc(o.domain||''),'sm')}
+    </div>
+  </div>`;
+}
+
+/* ---------- DOSSIER ---------- */
+async function runDossier(ip){
+  const out=$('#d-out'); out.innerHTML='<div class="msg load">Resolving</div>';
+  try{
+    const o=await resolve(ip);
+    out.innerHTML=dossierCard(o,null);
+    const ptr=await reverseDNS(o.ip);
+    if(ptr) out.innerHTML=dossierCard(o,ptr);
+  }catch(e){out.innerHTML=`<div class="msg err">✕ ${esc(e.message)}</div>`;}
+}
+$('#d-go').onclick=()=>runDossier($('#d-ip').value);
+$('#d-me').onclick=()=>{$('#d-ip').value='';runDossier('');};
+$('#d-ip').addEventListener('keydown',e=>{if(e.key==='Enter')runDossier($('#d-ip').value);});
+
+/* ---------- extract IPs ---------- */
+function extractIPs(txt){
+  const v4=txt.match(/\b(?:\d{1,3}\.){3}\d{1,3}\b/g)||[];
+  const v6=txt.match(/\b(?:[A-F0-9]{1,4}:){2,7}[A-F0-9]{1,4}\b/gi)||[];
+  return [...new Set([...v4,...v6])];
+}
+async function pool(items,worker,size=4){
+  const out=new Array(items.length); let i=0;
+  async function next(){const idx=i++; if(idx>=items.length)return; out[idx]=await worker(items[idx],idx); await next();}
+  await Promise.all(Array.from({length:Math.min(size,items.length)},next));
+  return out;
+}
+
+/* ---------- BULK ---------- */
+let bulkRows=[];
+$('#b-go').onclick=async()=>{
+  const out=$('#b-out'), csvBtn=$('#b-csv'), cnt=$('#b-count');
+  let ips=extractIPs($('#b-in').value);
+  if(!ips.length){out.innerHTML='<div class="msg err">No valid IP addresses found.</div>';return;}
+  const capped=ips.length>50; ips=ips.slice(0,50);
+  cnt.textContent=`${ips.length} IP${ips.length>1?'s':''}${capped?' (capped from more)':''}`;
+  out.innerHTML='<div class="msg load">Resolving list</div>';
+  csvBtn.disabled=true; bulkRows=[];
+  const results=await pool(ips,async ip=>{try{return await resolve(ip);}catch(e){return{ip,error:e.message};}});
+  bulkRows=results;
+  const rows=results.map(o=>o.error
+    ? `<tr><td>${esc(o.ip)}</td><td class="bad" colspan="5">${esc(o.error)}</td></tr>`
+    : `<tr><td>${esc(o.ip)}</td><td>${o.flag} ${esc(o.country||'')}</td><td>${esc(o.city||'')}</td><td>${esc(o.isp||o.org||'')}</td><td>${esc(o.asn||'')}</td><td>${esc(o.type||'')}</td></tr>`
+  ).join('');
+  out.innerHTML=`<div class="tblwrap"><table id="b-tbl">
+    <thead><tr><th data-c="ip">IP</th><th data-c="country">Country</th><th data-c="city">City</th><th data-c="isp">ISP / Org</th><th data-c="asn">ASN</th><th data-c="type">Type</th></tr></thead>
+    <tbody>${rows}</tbody></table></div>`;
+  csvBtn.disabled=false;
+};
+$('#b-csv').onclick=()=>{
+  const head=['ip','type','country','region','city','postal','isp','org','asn','latitude','longitude','timezone','error'];
+  const lines=[head.join(',')].concat(bulkRows.map(o=>head.map(h=>{
+    const map={ip:o.ip,type:o.type,country:o.country,region:o.region,city:o.city,postal:o.postal,isp:o.isp,org:o.org,asn:o.asn,latitude:o.lat,longitude:o.lng,timezone:o.tzId,error:o.error};
+    let v=map[h]==null?'':String(map[h]);
+    if(/[",\n]/.test(v)) v='"'+v.replace(/"/g,'""')+'"';
+    return v;
+  }).join(',')));
+  const blob=new Blob([lines.join('\n')],{type:'text/csv'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob); a.download='ip-lookup.csv'; a.click();
+  URL.revokeObjectURL(a.href);
+};
+
+/* ---------- SECURITY ---------- */
+async function runSec(ip){
+  const out=$('#s-out'); out.innerHTML='<div class="msg load">Assessing</div>';
+  try{
+    const o=await resolve(ip); const v=classify(o);
+    out.innerHTML=`<div class="card">
+      <div class="verdict">
+        <span class="vdot b-${v.cat}"></span>
+        <div><div class="vtext k-${v.cat}">${v.label}</div>
+        <div class="vsub">${esc(o.org||o.isp||'unknown network')} · AS${esc(o.asn||'?')}</div></div>
+        <div class="badge" style="margin-left:auto">${o.flag} ${esc(o.countryCode||'')}</div>
+      </div>
+      <div class="grid">
+        ${cell('Assessment',v.reasons.map(esc).join('<br>'),'sm')}
+        ${cell('Location',esc([o.city,o.country].filter(Boolean).join(', ')))}
+        ${cell('ISP',esc(o.isp||''))}
+        ${cell('Reverse DNS','<span style="color:var(--dim)">checking…</span>','sm')}
+      </div>
+    </div>`;
+    const ptr=await reverseDNS(o.ip);
+    const cells=out.querySelectorAll('.cell .val');
+    if(cells.length) cells[cells.length-1].innerHTML=ptr?esc(ptr):'<span style="color:var(--dim)">none</span>';
+  }catch(e){out.innerHTML=`<div class="msg err">✕ ${esc(e.message)}</div>`;}
+}
+$('#s-go').onclick=()=>runSec($('#s-ip').value);
+$('#s-ip').addEventListener('keydown',e=>{if(e.key==='Enter')runSec($('#s-ip').value);});
+
+/* ---------- MAP ---------- */
+const W=1000,H=500;
+function proj(lng,lat){return [(lng+180)/360*W,(90-lat)/180*H];}
+let landPath=null, landTried=false;
+
+async function loadLand(){
+  if(landTried) return landPath; landTried=true;
+  try{
+    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js');
+    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/topojson-client/3.1.0/topojson-client.min.js');
+    const world=await (await fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json')).json();
+    const geo=topojson.feature(world,world.objects.countries);
+    const projection=d3.geoEquirectangular().scale(W/(2*Math.PI)).translate([W/2,H/2]);
+    landPath=d3.geoPath(projection)(geo);
+  }catch(e){landPath=null;}
+  return landPath;
+}
+function loadScript(src){return new Promise((res,rej)=>{const s=document.createElement('script');s.src=src;s.onload=res;s.onerror=rej;document.head.appendChild(s);});}
+
+function graticule(){
+  let g='';
+  for(let lat=-60;lat<=60;lat+=30){const y=proj(0,lat)[1];g+=`<line class="grat" x1="0" y1="${y}" x2="${W}" y2="${y}"/>`;}
+  for(let lng=-150;lng<=150;lng+=30){const x=proj(lng,0)[0];g+=`<line class="grat" x1="${x}" y1="0" x2="${x}" y2="${H}"/>`;}
+  return g;
+}
+
+$('#m-go').onclick=async()=>{
+  const out=$('#m-out');
+  let ips=extractIPs($('#m-in').value).slice(0,25);
+  if(!ips.length){out.innerHTML='<div class="msg err">No valid IP addresses found.</div>';return;}
+  out.innerHTML='<div class="msg load">Locating points</div>';
+  await loadLand();
+  const results=await pool(ips,async ip=>{try{return await resolve(ip);}catch(e){return null;}});
+  const pts=results.filter(o=>o&&o.lat!=null);
+  if(!pts.length){out.innerHTML='<div class="msg err">Could not locate any of those IPs.</div>';return;}
+  const xy=pts.map(o=>proj(o.lng,o.lat));
+  const line=xy.length>1?`<polyline class="link" points="${xy.map(p=>p.join(',')).join(' ')}"/>`:'';
+  const dots=pts.map((o,i)=>{const [x,y]=xy[i];return `
+    <g>
+      <circle class="ping-halo" cx="${x}" cy="${y}" r="4"><animate attributeName="r" values="4;18" dur="2s" begin="${i*0.15}s" repeatCount="indefinite"/><animate attributeName="opacity" values=".9;0" dur="2s" begin="${i*0.15}s" repeatCount="indefinite"/></circle>
+      <circle class="ping" cx="${x}" cy="${y}" r="3.5"/>
+      <text class="plabel" x="${x+7}" y="${y+3}">${esc(o.city||o.countryCode||o.ip)}</text>
+    </g>`;}).join('');
+  out.innerHTML=`<div class="mapbox">
+    <svg class="world" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">
+      <rect width="${W}" height="${H}" fill="var(--mapbg)"/>
+      ${graticule()}
+      ${landPath?`<path class="land" d="${landPath}"/>`:''}
+      ${line}${dots}
+    </svg>
+    <div class="legend">
+      <span>◍ ${pts.length} located</span>
+      ${pts.length<results.length?`<span style="color:var(--dim)">${results.length-pts.length} unresolved</span>`:''}
+      ${!landPath?'<span style="color:var(--dim)">coordinate grid (map data unavailable)</span>':''}
+    </div>
+  </div>`;
+};
+
+/* ---------- bulk table sort ---------- */
+document.addEventListener('click',e=>{
+  const th=e.target.closest('#b-tbl th'); if(!th)return;
+  const tbody=th.closest('table').querySelector('tbody');
+  const idx=[...th.parentNode.children].indexOf(th);
+  const asc=th.dataset.asc!=='1'; th.dataset.asc=asc?'1':'0';
+  [...tbody.rows].sort((a,b)=>{
+    const x=a.cells[idx].innerText.toLowerCase(), y=b.cells[idx].innerText.toLowerCase();
+    return asc?x.localeCompare(y,undefined,{numeric:true}):y.localeCompare(x,undefined,{numeric:true});
+  }).forEach(r=>tbody.appendChild(r));
+});
+</script>
+</body>
+</html>
